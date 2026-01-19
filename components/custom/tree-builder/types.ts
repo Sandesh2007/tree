@@ -1,3 +1,5 @@
+import type { Node, Edge } from "@xyflow/react";
+
 export type NodeLevel = "executive" | "manager" | "lead" | "member";
 
 /**
@@ -13,7 +15,7 @@ export type RelationType =
 /**
  * Represents the data of a person in the tree.
  */
-export interface PersonData {
+export interface PersonData extends Record<string, unknown> {
   name: string;
   role: string;
   department?: string;
@@ -39,24 +41,13 @@ export interface PersonFormData {
 /**
  * Custom node data
  */
-export interface TreeNode {
-  id: string;
+export interface TreeNode extends Node<PersonData> {
   type: string;
-  position: { x: number; y: number };
-  data: PersonData;
 }
 
-export interface TreeEdge {
-  id: string;
-  source: string;
-  target: string;
+export interface TreeEdge extends Edge<{
+  relationType: RelationType;
+  label?: string;
+}> {
   type: string;
-  data: {
-    relationType: RelationType;
-    label?: string;
-  };
-  markerEnd: {
-    type: any;
-    color: string;
-  };
 }

@@ -13,6 +13,7 @@ import {
   MarkerType,
   ReactFlowProvider,
 } from "@xyflow/react";
+import type { OnNodesChange, OnEdgesChange } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 
 import PersonNode from "./tree-builder/person-node";
@@ -60,15 +61,13 @@ function TreeBuilderInner() {
   const nodeTypes = useMemo(() => ({ person: PersonNode }), []);
   const edgeTypes = useMemo(() => ({ custom: CustomEdge }), []);
 
-  const onNodesChange = useCallback(
-    (changes: any) => setNodes((nds) => applyNodeChanges(changes, nds)),
-    [],
-  );
+  const onNodesChange: OnNodesChange<TreeNode> = useCallback((changes) => {
+    setNodes((nds) => applyNodeChanges(changes, nds));
+  }, []);
 
-  const onEdgesChange = useCallback(
-    (changes: any) => setEdges((eds) => applyEdgeChanges(changes, eds)),
-    [],
-  );
+  const onEdgesChange: OnEdgesChange<TreeEdge> = useCallback((changes) => {
+    setEdges((eds) => applyEdgeChanges(changes, eds));
+  }, []);
 
   const onConnect = useCallback((params: any) => {
     const newEdge: TreeEdge = {
