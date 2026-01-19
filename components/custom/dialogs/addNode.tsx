@@ -4,14 +4,8 @@ import Modal from "@/components/ui/modal";
 import FormInput from "@/components/custom/form/form-input";
 import FormSelect from "@/components/custom/form/form-select";
 import Button from "@/components/ui/button";
-import {
-  PersonFormData,
-  TreeNode,
-} from "@/components/custom/tree-builder/types";
-import {
-  levelOptions,
-  relationOptions,
-} from "@/components/custom/tree-builder/constants";
+import { PersonFormData, TreeNode } from "@/types/types";
+import { levelOptions, relationOptions } from "@/types/constants";
 
 interface AddNodeDialogProps {
   isOpen: boolean;

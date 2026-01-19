@@ -1,4 +1,4 @@
-import { NodeLevel, RelationType } from "./types";
+import { NodeLevel, RelationType } from "@/types/types";
 
 /**
  * for now we will be adding some const data but in future user will be able to add their own data

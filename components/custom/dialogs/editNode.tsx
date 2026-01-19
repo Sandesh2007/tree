@@ -4,8 +4,8 @@ import Modal from "@/components/ui/modal";
 import FormInput from "../form/form-input";
 import FormSelect from "../form/form-select";
 import Button from "@/components/ui/button";
-import { PersonFormData } from "../tree-builder/types";
-import { levelOptions } from "../tree-builder/constants";
+import { PersonFormData } from "../../../types/types";
+import { levelOptions } from "@/types/constants";
 
 interface EditPersonDialogProps {
   isOpen: boolean;

@@ -5,7 +5,6 @@ import { relationConfig } from "@/types/constants";
 import { RelationType } from "@/types/types";
 
 export default function CustomEdge({
-  id,
   sourceX,
   sourceY,
   targetX,
@@ -22,8 +21,6 @@ export default function CustomEdge({
   // Calculate offset for multiple edges between same nodes
   const edgeIndex = data?.edgeIndex || 0;
   const totalEdges = data?.totalEdges || 1;
-
-  // Calculate offset - spread edges apart
   const offsetMultiplier = 50;
   const baseOffset = (edgeIndex - (totalEdges - 1) / 2) * offsetMultiplier;
 
@@ -47,7 +44,6 @@ export default function CustomEdge({
           stroke: config.color,
           strokeWidth: selected ? 3 : 2,
           strokeDasharray: config.dashed ? "6,4" : "0",
-          transition: "stroke-width 0.2s",
         }}
       />
       {data?.label && (
@@ -58,11 +54,7 @@ export default function CustomEdge({
               transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
               pointerEvents: "all",
             }}
-            className={`px-2 py-1 rounded-md text-xs font-medium bg-white dark:bg-neutral-800 border shadow-sm transition-all ${
-              selected
-                ? "border-neutral-400 dark:border-neutral-500 shadow-md"
-                : "border-neutral-200 dark:border-neutral-700"
-            }`}
+            className="px-2 py-1 rounded-md text-xs font-medium bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 shadow-sm"
           >
             <span style={{ color: config.color }}>{data.label}</span>
           </div>

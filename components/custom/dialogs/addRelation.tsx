@@ -3,11 +3,8 @@
 import Modal from "@/components/ui/modal";
 import FormSelect from "../form/form-select";
 import Button from "@/components/ui/button";
-import {
-  PersonFormData,
-  TreeNode,
-} from "@/components/custom/tree-builder/types";
-import { relationOptions } from "@/components/custom/tree-builder/constants";
+import { PersonFormData, TreeNode } from "@/types/types";
+import { relationOptions } from "@/types/constants";
 
 interface AddRelationDialogProps {
   isOpen: boolean;
