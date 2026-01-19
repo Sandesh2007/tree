@@ -1,5 +1,4 @@
 "use client";
-import React from "react";
 import { useTheme } from "next-themes";
 
 import { Moon, Sun } from "lucide-react";
@@ -8,20 +7,10 @@ import Button from "@/components/ui/button";
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
 
-  // const [mounted, setMounted] = React.useState(false);
-  // useEffect(() => {
-  //   setMounted(true);
-  // }, []);
-
-  // if (!mounted) {
-  //   return null;
-  // }
-
   return (
     <Button
-      // className="outline-none text-black dark:text-white"
-      variant={"ghost"}
-      size="md"
+      variant="ghost"
+      className="bg-neutral-100 dark:bg-neutral-800 text-neutral-950 dark:text-neutral-50"
       tooltip={
         theme === "dark" ? "Switch to light mode" : "Switch to dark mode"
       }
@@ -30,7 +19,7 @@ export function ThemeToggle() {
       }}
     >
       {/* <SunMoon size={32} /> */}
-      {theme === "dark" ? <Sun /> : <Moon />}
+      {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
     </Button>
   );
 }

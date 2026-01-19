@@ -51,3 +51,10 @@ export interface TreeEdge extends Edge<{
 }> {
   type: string;
 }
+
+export interface EdgeData {
+  relationType: RelationType;
+  label?: string;
+  edgeIndex?: number;
+  totalEdges?: number;
+}
