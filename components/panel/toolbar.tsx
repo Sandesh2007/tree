@@ -10,6 +10,8 @@ import {
   Undo2,
   Redo2,
   LayoutGrid,
+  ZoomIn,
+  Image,
 } from "lucide-react";
 import Button from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/themeToggle";
@@ -20,11 +22,13 @@ interface ToolbarProps {
   onEditPerson: () => void;
   onAddRelation: () => void;
   onDeletePerson: () => void;
-  onExport: () => void;
+  onExportData: () => void;
+  onExportImage: () => void;
   onImport: () => void;
   onUndo: () => void;
   onRedo: () => void;
   onAutoLayout: () => void;
+  onZoomToFit: () => void;
   canUndo: boolean;
   canRedo: boolean;
   nodeCount: number;
@@ -36,42 +40,42 @@ export default function Toolbar({
   onEditPerson,
   onAddRelation,
   onDeletePerson,
-  onExport,
+  onExportData,
+  onExportImage,
   onImport,
   onUndo,
   onRedo,
   onAutoLayout,
+  onZoomToFit,
   canUndo,
   canRedo,
   nodeCount,
 }: ToolbarProps) {
   return (
-    <div className="flex items-center gap-2 bg-neutral-50/90 dark:bg-neutral-900/70 backdrop-blur-sm px-4 py-3 rounded-xl shadow-lg border">
-      <Button
-        onClick={onAddPerson}
-        className="bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 text-neutral-950 dark:text-neutral-50 hover:dark:bg-neutral-700 hover:dark:text-neutral-50"
-      >
+    <div className="flex items-center gap-2 bg-white/90 dark:bg-neutral-800/90 backdrop-blur-sm px-4 py-3 rounded-xl shadow-lg border border-neutral-200 dark:border-neutral-700">
+      <Button onClick={onAddPerson}>
         <Plus size={18} />
-        Add Person
+        <span className="hidden sm:inline">Add Person</span>
       </Button>
 
-      <div className="w-px h-6 bg-slate-200" />
+      <div className="w-px h-6 bg-neutral-200 dark:bg-neutral-700" />
 
       <Button
         variant="ghost"
+        size="md"
         onClick={onUndo}
         disabled={!canUndo}
-        tooltip="Undo (Ctrl+Z)"
-        className="bg-neutral-100 dark:bg-neutral-800 text-neutral-950 dark:text-neutral-50"
+        title="Undo (Ctrl+Z)"
       >
         <Undo2 size={18} />
       </Button>
+
       <Button
         variant="ghost"
+        size="md"
         onClick={onRedo}
         disabled={!canRedo}
-        tooltip="Redo (Ctrl+Y)"
-        className="bg-neutral-100 dark:bg-neutral-800 text-neutral-950 dark:text-neutral-50"
+        title="Redo (Ctrl+Y)"
       >
         <Redo2 size={18} />
       </Button>
@@ -82,22 +86,23 @@ export default function Toolbar({
         variant="secondary"
         onClick={onEditPerson}
         disabled={!hasSelection}
-        className="bg-neutral-100 dark:bg-neutral-800 text-neutral-950 dark:text-neutral-50"
       >
         <Pencil size={16} />
-        Edit
+        <span className="hidden sm:inline">Edit</span>
       </Button>
+
       <Button
         variant="secondary"
         onClick={onAddRelation}
         disabled={!hasSelection}
-        className="bg-neutral-100 dark:bg-neutral-800 text-neutral-950 dark:text-neutral-50"
       >
         <Link2 size={16} />
-        Connect
+        <span className="hidden sm:inline">Connect</span>
       </Button>
+
       <Button
         variant="destructive"
+        size="md"
         onClick={onDeletePerson}
         disabled={!hasSelection}
       >
@@ -108,37 +113,57 @@ export default function Toolbar({
 
       <Button
         variant="ghost"
+        size="md"
         onClick={onAutoLayout}
         disabled={nodeCount === 0}
-        tooltip="Auto Layout"
-        className="bg-neutral-100 dark:bg-neutral-800 text-neutral-950 dark:text-neutral-50"
+        title="Auto Layout"
       >
         <LayoutGrid size={18} />
       </Button>
+
       <Button
         variant="ghost"
-        onClick={onExport}
+        size="md"
+        onClick={onZoomToFit}
         disabled={nodeCount === 0}
-        tooltip="Export"
-        className="bg-neutral-100 dark:bg-neutral-800 text-neutral-950 dark:text-neutral-50"
+        title="Zoom to Fit"
+      >
+        <ZoomIn size={18} />
+      </Button>
+
+      <div className="w-px h-6 bg-neutral-200 dark:bg-neutral-700" />
+
+      <Button
+        variant="ghost"
+        size="md"
+        onClick={onExportData}
+        disabled={nodeCount === 0}
+        title="Export JSON"
       >
         <Download size={18} />
       </Button>
+
       <Button
         variant="ghost"
-        onClick={onImport}
-        tooltip="Import"
-        className="bg-neutral-100 dark:bg-neutral-800 text-neutral-950 dark:text-neutral-50"
+        size="md"
+        onClick={onExportImage}
+        disabled={nodeCount === 0}
+        title="Export Image"
       >
+        <Image size={18} />
+      </Button>
+
+      <Button variant="ghost" size="md" onClick={onImport} title="Import">
         <Upload size={18} />
       </Button>
+
       <ThemeToggle />
 
       {nodeCount > 0 && (
         <>
           <div className="w-px h-6 bg-neutral-200 dark:bg-neutral-700" />
           <span className="text-xs text-neutral-500 dark:text-neutral-400">
-            {nodeCount} people
+            {nodeCount} {nodeCount === 1 ? "person" : "people"}
           </span>
         </>
       )}

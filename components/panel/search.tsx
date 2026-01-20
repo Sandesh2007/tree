@@ -2,14 +2,14 @@
 
 import { useState } from "react";
 import { Search, X } from "lucide-react";
-import { TreeNode } from "@/types/types";
+import { PersonData } from "@/types/types";
 import { levelConfig } from "@/types/constants";
 import { cn } from "@/lib/utils";
 
 interface SearchPanelProps {
-  nodes: TreeNode[];
-  onNodeSelect: (nodeId: string) => void;
-  onNodeFocus: (nodeId: string) => void;
+  nodes: PersonData[];
+  onNodeSelect: (key: string) => void;
+  onNodeFocus: (key: string) => void;
 }
 
 export default function SearchPanel({
@@ -22,24 +22,24 @@ export default function SearchPanel({
 
   const filteredNodes = nodes.filter(
     (node) =>
-      node.data.name.toLowerCase().includes(query.toLowerCase()) ||
-      node.data.role.toLowerCase().includes(query.toLowerCase()) ||
-      node.data.department?.toLowerCase().includes(query.toLowerCase()),
+      node.name.toLowerCase().includes(query.toLowerCase()) ||
+      node.role.toLowerCase().includes(query.toLowerCase()) ||
+      node.department?.toLowerCase().includes(query.toLowerCase()),
   );
 
-  const handleNodeClick = (nodeId: string) => {
-    onNodeSelect(nodeId);
-    onNodeFocus(nodeId);
+  const handleNodeClick = (key: string) => {
+    onNodeSelect(key);
+    onNodeFocus(key);
     setQuery("");
     setIsExpanded(false);
   };
 
   return (
-    <div className="bg-white/90 dark:bg-neutral-800/90 backdrop-blur-sm rounded-xl shadow-lg border border-neutral-200 dark:border-neutral-700 overflow-hidden">
+    <div className="bg-white/90 dark:bg-neutral-800/90 backdrop-blur-sm rounded-xl shadow-lg border border-neutral-200 dark:border-neutral-700 overflow-hidden mb-2">
       <div className="relative">
         <Search
           size={18}
-          className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-neutral-500"
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400"
         />
         <input
           type="text"
@@ -50,7 +50,7 @@ export default function SearchPanel({
           }}
           onFocus={() => setIsExpanded(true)}
           placeholder="Search people..."
-          className="w-full pl-10 pr-10 py-3 text-sm bg-transparent focus:outline-none text-neutral-900 dark:text-neutral-50 placeholder:text-neutral-400 dark:placeholder:text-neutral-500"
+          className="w-full pl-10 pr-10 py-3 text-sm bg-transparent focus:outline-none dark:text-white"
         />
         {query && (
           <button
@@ -58,7 +58,7 @@ export default function SearchPanel({
               setQuery("");
               setIsExpanded(false);
             }}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-300"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
           >
             <X size={16} />
           </button>
@@ -68,27 +68,26 @@ export default function SearchPanel({
       {isExpanded && query && (
         <div className="border-t border-neutral-100 dark:border-neutral-700 max-h-64 overflow-y-auto">
           {filteredNodes.length === 0 ? (
-            <div className="px-4 py-3 text-sm text-neutral-500 dark:text-neutral-400 text-center">
+            <div className="px-4 py-3 text-sm text-neutral-500 text-center">
               No results found
             </div>
           ) : (
             filteredNodes.map((node) => {
-              const config = levelConfig[node.data.level];
+              const config = levelConfig[node.level];
               return (
                 <button
-                  key={node.id}
-                  onClick={() => handleNodeClick(node.id)}
+                  key={node.key}
+                  onClick={() => handleNodeClick(node.key)}
                   className="w-full px-4 py-3 flex items-center gap-3 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors text-left"
                 >
                   <div
                     className={cn(
-                      "w-8 h-8 rounded-lg flex items-center justify-center text-xs font-semibold dark:opacity-90",
+                      "w-8 h-8 rounded-lg flex items-center justify-center text-xs font-semibold",
                       config.bgColor,
                       config.color,
-                      "dark:brightness-125",
                     )}
                   >
-                    {node.data.name
+                    {node.name
                       .split(" ")
                       .map((n) => n[0])
                       .join("")
@@ -96,11 +95,11 @@ export default function SearchPanel({
                       .slice(0, 2)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-neutral-900 dark:text-neutral-50 truncate">
-                      {node.data.name}
+                    <p className="text-sm font-medium text-neutral-900 dark:text-white truncate">
+                      {node.name}
                     </p>
-                    <p className="text-xs text-neutral-500 dark:text-neutral-400 truncate">
-                      {node.data.role}
+                    <p className="text-xs text-neutral-500 truncate">
+                      {node.role}
                     </p>
                   </div>
                 </button>

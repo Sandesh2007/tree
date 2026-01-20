@@ -10,7 +10,7 @@ export function ThemeToggle() {
   return (
     <Button
       variant="ghost"
-      className="bg-neutral-100 dark:bg-neutral-800 text-neutral-950 dark:text-neutral-50"
+      className="hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-950 dark:text-neutral-50"
       tooltip={
         theme === "dark" ? "Switch to light mode" : "Switch to dark mode"
       }

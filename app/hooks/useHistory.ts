@@ -1,12 +1,10 @@
 "use client";
 
-// save history
 import { useState, useCallback } from "react";
-import { TreeNode, TreeEdge } from "@/types/types";
 
 interface HistoryState {
-  nodes: TreeNode[];
-  edges: TreeEdge[];
+  nodes: any[];
+  edges: any[];
 }
 
 export function useHistory() {
@@ -14,14 +12,14 @@ export function useHistory() {
   const [currentIndex, setCurrentIndex] = useState(-1);
 
   const pushState = useCallback(
-    (nodes: TreeNode[], edges: TreeEdge[]) => {
+    (nodes: any[], edges: any[]) => {
       setHistory((prev) => {
         const newHistory = prev.slice(0, currentIndex + 1);
         newHistory.push({
           nodes: JSON.parse(JSON.stringify(nodes)),
           edges: JSON.parse(JSON.stringify(edges)),
         });
-        return newHistory.slice(-50); // Keep last 50 states
+        return newHistory.slice(-50);
       });
       setCurrentIndex((prev) => Math.min(prev + 1, 49));
     },

@@ -1,45 +1,35 @@
 "use client";
 
-import { useState, useCallback, useMemo, useRef, useEffect } from "react";
-import {
-  ReactFlow,
-  applyNodeChanges,
-  applyEdgeChanges,
-  addEdge,
-  Controls,
-  MiniMap,
-  Background,
-  Panel,
-  MarkerType,
-  ReactFlowProvider,
-  useReactFlow,
-} from "@xyflow/react";
-import "@xyflow/react/dist/style.css";
-import { gsap } from "gsap";
+import { useState, useCallback, useRef, useEffect } from "react";
+import dynamic from "next/dynamic";
 
-import PersonNode from "@/components/custom/tree-builder/person-node";
-import CustomEdge from "@/components/custom/tree-builder/custom-edge";
-import Toolbar from "@/components/custom/panel/toolbar";
-import Legend from "@/components/custom/panel/legend";
-import NodeInfo from "@/components/custom/panel/node-info";
-import SearchPanel from "@/components/custom/panel/search";
-import AddPersonDialog from "@/components/custom/dialogs/addNode";
-import EditPersonDialog from "@/components/custom/dialogs/editNode";
-import AddRelationDialog from "@/components/custom/dialogs/add-relation-dialog";
+import Toolbar from "@/components/panel/toolbar";
+import Legend from "@/components/panel/legend";
+import NodeInfo from "@/components/panel/node-info";
+import SearchPanel from "@/components/panel/search";
+import AddPersonDialog from "@/components/dialogs/addNode";
+import EditPersonDialog from "@/components/dialogs/editNode";
+import AddRelationDialog from "@/components/dialogs/add-relation-dialog";
 import ConfirmDialog from "@/components/custom/confirm-dialog";
 import EmptyState from "@/components/custom/tree-builder/emptyState";
 import ToastContainer from "@/components/custom/toast";
 import { useToast } from "@/app/hooks/useToast";
 import { useHistory } from "@/app/hooks/useHistory";
+import { DiagramRef } from "@/components/custom/tree-builder/diagramWrapper";
 
 import {
-  TreeNode,
-  TreeEdge,
+  PersonData,
+  LinkData,
   PersonFormData,
   RelationType,
-} from "../../types/types";
-import { relationConfig, levelConfig } from "../../types/constants";
-import { calculateTreeLayout } from "@/app/utils/treelayout";
+} from "@/types/types";
+import { relationConfig } from "@/types/constants";
+
+// Dynamic import to avoid SSR issues with GoJS
+const DiagramWrapper = dynamic(
+  () => import("@/components/custom/tree-builder/diagramWrapper"),
+  { ssr: false },
+);
 
 const initialFormData: PersonFormData = {
   name: "",
@@ -52,9 +42,9 @@ const initialFormData: PersonFormData = {
   relationType: "reports_to",
 };
 
-function TreeBuilderInner() {
-  const [nodes, setNodes] = useState<TreeNode[]>([]);
-  const [edges, setEdges] = useState<TreeEdge[]>([]);
+export default function TreeBuilder() {
+  const [nodes, setNodes] = useState<PersonData[]>([]);
+  const [links, setLinks] = useState<LinkData[]>([]);
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -66,57 +56,27 @@ function TreeBuilderInner() {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const diagramRef = useRef<DiagramRef>(null);
+
   const { toasts, addToast, removeToast } = useToast();
   const { pushState, undo, redo, canUndo, canRedo } = useHistory();
-  const { fitView, setCenter } = useReactFlow();
 
-  const nodeTypes = useMemo(() => ({ person: PersonNode }), []);
-  const edgeTypes = useMemo(() => ({ custom: CustomEdge }), []);
-
-  // Process edges to add index information for offset calculation
-  const processedEdges = useMemo(() => {
-    const edgePairs = new Map<string, TreeEdge[]>();
-
-    // Group edges by node pairs (bidirectional)
-    edges.forEach((edge) => {
-      const key = [edge.source, edge.target].sort().join("-");
-      if (!edgePairs.has(key)) {
-        edgePairs.set(key, []);
-      }
-      edgePairs.get(key)!.push(edge);
-    });
-
-    // Add index and total count to each edge
-    return edges.map((edge) => {
-      const key = [edge.source, edge.target].sort().join("-");
-      const pairEdges = edgePairs.get(key)!;
-      const index = pairEdges.findIndex((e) => e.id === edge.id);
-
-      return {
-        ...edge,
-        data: {
-          ...edge.data,
-          edgeIndex: index,
-          totalEdges: pairEdges.length,
-        },
-      };
-    });
-  }, [edges]);
-
+  // Handle undo
   const handleUndo = useCallback(() => {
     const state = undo();
     if (state) {
-      setNodes(state.nodes);
-      setEdges(state.edges);
+      setNodes(state.nodes as PersonData[]);
+      setLinks(state.edges as LinkData[]);
       addToast("info", "Undo successful");
     }
   }, [undo, addToast]);
 
+  // Handle redo
   const handleRedo = useCallback(() => {
     const state = redo();
     if (state) {
-      setNodes(state.nodes);
-      setEdges(state.edges);
+      setNodes(state.nodes as PersonData[]);
+      setLinks(state.edges as LinkData[]);
       addToast("info", "Redo successful");
     }
   }, [redo, addToast]);
@@ -158,67 +118,65 @@ function TreeBuilderInner() {
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [selectedNode]);
+  }, [selectedNode, handleUndo, handleRedo]);
 
+  // Save state for undo/redo
   const saveState = useCallback(() => {
-    pushState(nodes, edges);
-  }, [nodes, edges, pushState]);
+    pushState(nodes as any, links as any);
+  }, [nodes, links, pushState]);
 
-  const onNodesChange = useCallback(
-    (changes: any) => setNodes((nds) => applyNodeChanges(changes, nds)),
+  // Handle node selection from diagram
+  const handleNodeSelect = useCallback((key: string | null) => {
+    setSelectedNode(key);
+  }, []);
+
+  // Handle model changes from diagram
+  const handleModelChange = useCallback(
+    (data: { nodes: PersonData[]; links: LinkData[] }) => {
+      // Update positions from diagram
+      setNodes(data.nodes);
+      setLinks(data.links);
+    },
     [],
   );
 
-  const onEdgesChange = useCallback(
-    (changes: any) => setEdges((eds) => applyEdgeChanges(changes, eds)),
-    [],
-  );
-
-  const onConnect = useCallback(
-    (params: any) => {
-      // Check for existing relation
-      const existingEdge = edges.find(
-        (e) =>
-          (e.source === params.source && e.target === params.target) ||
-          (e.source === params.target && e.target === params.source),
+  // Handle link created via drag
+  const handleLinkCreated = useCallback(
+    (fromKey: string, toKey: string) => {
+      // Check for existing link
+      const exists = links.some(
+        (l) =>
+          (l.from === fromKey && l.to === toKey) ||
+          (l.from === toKey && l.to === fromKey),
       );
 
-      if (existingEdge) {
-        addToast("warning", "A connection already exists between these nodes");
+      if (exists) {
+        addToast("warning", "Connection already exists");
         return;
       }
 
-      const newEdge: TreeEdge = {
-        ...params,
-        id: `e-${params.source}-${params.target}-${Date.now()}`,
-        type: "custom",
-        data: { relationType: "manages" as RelationType, label: "Manages" },
-        markerEnd: {
-          type: MarkerType.ArrowClosed,
-          color: relationConfig.manages.color,
-        },
+      const newLink: LinkData = {
+        key: `link-${Date.now()}`,
+        from: fromKey,
+        to: toKey,
+        relationType: "manages",
+        label: "Manages",
       };
 
-      setEdges((eds) => addEdge(newEdge, eds));
+      setLinks((prev) => [...prev, newLink]);
       saveState();
       addToast("success", "Connection created");
     },
-    [edges, addToast, saveState],
+    [links, addToast, saveState],
   );
 
-  const onNodeClick = useCallback((_: any, node: any) => {
-    setSelectedNode(node.id);
-  }, []);
-
-  const onPaneClick = useCallback(() => {
-    setSelectedNode(null);
-  }, []);
-
+  // Reset form
   const resetForm = () => {
     setFormData(initialFormData);
     setFormErrors({});
   };
 
+  // Validate form
   const validateForm = (data: PersonFormData) => {
     const errors: Record<string, string> = {};
 
@@ -238,71 +196,59 @@ function TreeBuilderInner() {
     return Object.keys(errors).length === 0;
   };
 
+  // Add person
   const handleAddPerson = () => {
     if (!validateForm(formData)) return;
 
-    const newId = `node-${Date.now()}`;
-    const parentNode = nodes.find((n) => n.id === formData.parentId);
+    const newKey = `node-${Date.now()}`;
 
-    const newNode: TreeNode = {
-      id: newId,
-      type: "person",
-      position: {
-        x: parentNode ? parentNode.position.x + 50 : 100 + nodes.length * 50,
-        y: parentNode ? parentNode.position.y + 250 : 100,
-      },
-      data: {
-        name: formData.name.trim(),
-        role: formData.role.trim(),
-        department: formData.department.trim() || undefined,
-        email: formData.email.trim() || undefined,
-        phone: formData.phone.trim() || undefined,
-        level: formData.level,
-      },
+    const newNode: PersonData = {
+      key: newKey,
+      name: formData.name.trim(),
+      role: formData.role.trim(),
+      department: formData.department.trim() || undefined,
+      email: formData.email.trim() || undefined,
+      phone: formData.phone.trim() || undefined,
+      level: formData.level,
     };
 
-    setNodes((nds) => [...nds, newNode]);
+    setNodes((prev) => [...prev, newNode]);
 
     if (formData.parentId) {
-      const newEdge: TreeEdge = {
-        id: `e-${formData.parentId}-${newId}`,
-        source: formData.parentId,
-        target: newId,
-        type: "custom",
-        data: {
-          relationType: formData.relationType,
-          label: relationConfig[formData.relationType].label,
-        },
-        markerEnd: {
-          type: MarkerType.ArrowClosed,
-          color: relationConfig[formData.relationType].color,
-        },
+      const newLink: LinkData = {
+        key: `link-${Date.now()}`,
+        from: formData.parentId,
+        to: newKey,
+        relationType: formData.relationType,
+        label: relationConfig[formData.relationType].label,
       };
-      setEdges((eds) => [...eds, newEdge]);
+      setLinks((prev) => [...prev, newLink]);
     }
 
     saveState();
     resetForm();
     setIsAddModalOpen(false);
     addToast("success", `${formData.name} added successfully`);
+
+    // Apply layout after adding
+    setTimeout(() => diagramRef.current?.applyLayout(), 100);
   };
 
+  // Edit person
   const handleEditPerson = () => {
     if (!selectedNode || !validateForm(formData)) return;
 
-    setNodes((nds) =>
-      nds.map((node) =>
-        node.id === selectedNode
+    setNodes((prev) =>
+      prev.map((node) =>
+        node.key === selectedNode
           ? {
               ...node,
-              data: {
-                name: formData.name.trim(),
-                role: formData.role.trim(),
-                department: formData.department.trim() || undefined,
-                email: formData.email.trim() || undefined,
-                phone: formData.phone.trim() || undefined,
-                level: formData.level,
-              },
+              name: formData.name.trim(),
+              role: formData.role.trim(),
+              department: formData.department.trim() || undefined,
+              email: formData.email.trim() || undefined,
+              phone: formData.phone.trim() || undefined,
+              level: formData.level,
             }
           : node,
       ),
@@ -314,33 +260,35 @@ function TreeBuilderInner() {
     addToast("success", "Changes saved successfully");
   };
 
+  // Delete person
   const handleDeletePerson = () => {
     if (!selectedNode) return;
 
-    const nodeToDelete = nodes.find((n) => n.id === selectedNode);
-    setNodes((nds) => nds.filter((node) => node.id !== selectedNode));
-    setEdges((eds) =>
-      eds.filter(
-        (edge) => edge.source !== selectedNode && edge.target !== selectedNode,
+    const nodeToDelete = nodes.find((n) => n.key === selectedNode);
+    setNodes((prev) => prev.filter((node) => node.key !== selectedNode));
+    setLinks((prev) =>
+      prev.filter(
+        (link) => link.from !== selectedNode && link.to !== selectedNode,
       ),
     );
 
     saveState();
     setSelectedNode(null);
     setIsDeleteConfirmOpen(false);
-    addToast("success", `${nodeToDelete?.data.name} removed`);
+    addToast("success", `${nodeToDelete?.name} removed`);
   };
 
+  // Open edit modal
   const openEditModal = () => {
-    const node = nodes.find((n) => n.id === selectedNode);
+    const node = nodes.find((n) => n.key === selectedNode);
     if (node) {
       setFormData({
-        name: node.data.name,
-        role: node.data.role,
-        department: node.data.department || "",
-        email: node.data.email || "",
-        phone: node.data.phone || "",
-        level: node.data.level,
+        name: node.name,
+        role: node.role,
+        department: node.department || "",
+        email: node.email || "",
+        phone: node.phone || "",
+        level: node.level,
         parentId: "",
         relationType: "reports_to",
       });
@@ -348,112 +296,57 @@ function TreeBuilderInner() {
     }
   };
 
+  // Add relation
   const handleAddRelation = () => {
     if (!selectedNode || !formData.parentId) return;
 
-    // Check for duplicate relation
-    const existingEdge = edges.find(
-      (e) =>
-        ((e.source === formData.parentId && e.target === selectedNode) ||
-          (e.source === selectedNode && e.target === formData.parentId)) &&
-        e.data?.relationType === formData.relationType,
+    // Check for duplicate
+    const existingLink = links.find(
+      (l) =>
+        ((l.from === formData.parentId && l.to === selectedNode) ||
+          (l.from === selectedNode && l.to === formData.parentId)) &&
+        l.relationType === formData.relationType,
     );
 
-    if (existingEdge) {
+    if (existingLink) {
       addToast("error", "This relation already exists");
       return;
     }
 
-    const newEdge: TreeEdge = {
-      id: `e-${formData.parentId}-${selectedNode}-${Date.now()}`,
-      source: formData.parentId,
-      target: selectedNode,
-      type: "custom",
-      data: {
-        relationType: formData.relationType,
-        label: relationConfig[formData.relationType].label,
-      },
-      markerEnd: {
-        type: MarkerType.ArrowClosed,
-        color: relationConfig[formData.relationType].color,
-      },
+    const newLink: LinkData = {
+      key: `link-${Date.now()}`,
+      from: formData.parentId,
+      to: selectedNode,
+      relationType: formData.relationType,
+      label: relationConfig[formData.relationType].label,
     };
 
-    setEdges((eds) => [...eds, newEdge]);
+    setLinks((prev) => [...prev, newLink]);
     saveState();
     resetForm();
     setIsRelationModalOpen(false);
     addToast("success", "Connection added");
   };
 
+  // Auto layout
   const handleAutoLayout = useCallback(() => {
-    if (nodes.length === 0) return;
-
-    const positions = calculateTreeLayout(nodes, edges, {
-      nodeWidth: 220,
-      nodeHeight: 150,
-      horizontalSpacing: 60,
-      verticalSpacing: 100,
-      treeSpacing: 150,
-      direction: "TB",
-    });
-
-    // Animate nodes to new positions
-    const timeline = gsap.timeline({
-      onComplete: () => {
-        setTimeout(() => fitView({ padding: 0.2, duration: 500 }), 50);
-      },
-    });
-
-    const newNodes = nodes.map((node) => {
-      const pos = positions.get(node.id);
-      return pos ? { ...node, position: { x: pos.x, y: pos.y } } : node;
-    });
-
-    // Stagger animation for visual appeal
-    nodes.forEach((node, index) => {
-      const pos = positions.get(node.id);
-      if (pos) {
-        const element = document.querySelector(`[data-id="${node.id}"]`);
-        if (element) {
-          timeline.to(
-            element,
-            {
-              x: pos.x,
-              y: pos.y,
-              duration: 0.5,
-              ease: "power2.inOut",
-            },
-            index * 0.05,
-          );
-        }
-      }
-    });
-
-    setNodes(newNodes);
-    saveState();
+    diagramRef.current?.applyLayout();
     addToast("success", "Layout applied");
-  }, [nodes, edges, fitView, saveState, addToast]);
+  }, [addToast]);
 
-  const handleFitView = useCallback(() => {
-    fitView({ padding: 0.2, duration: 500 });
-  }, [fitView]);
+  // Zoom to fit
+  const handleZoomToFit = useCallback(() => {
+    diagramRef.current?.zoomToFit();
+  }, []);
 
-  const handleNodeFocus = useCallback(
-    (nodeId: string) => {
-      const node = nodes.find((n) => n.id === nodeId);
-      if (node) {
-        setCenter(node.position.x + 110, node.position.y + 100, {
-          zoom: 1,
-          duration: 500,
-        });
-      }
-    },
-    [nodes, setCenter],
-  );
+  // Focus on node
+  const handleNodeFocus = useCallback((key: string) => {
+    diagramRef.current?.centerOnNode(key);
+  }, []);
 
-  const handleExport = () => {
-    const data = { nodes, edges };
+  // Export data as JSON
+  const handleExportData = () => {
+    const data = { nodes, links };
     const blob = new Blob([JSON.stringify(data, null, 2)], {
       type: "application/json",
     });
@@ -466,10 +359,24 @@ function TreeBuilderInner() {
     addToast("success", "Tree exported successfully");
   };
 
+  // Export as image
+  const handleExportImage = () => {
+    const imageData = diagramRef.current?.exportImage();
+    if (imageData) {
+      const a = document.createElement("a");
+      a.href = imageData;
+      a.download = `org-tree-${new Date().toISOString().split("T")[0]}.png`;
+      a.click();
+      addToast("success", "Image exported successfully");
+    }
+  };
+
+  // Import
   const handleImport = () => {
     fileInputRef.current?.click();
   };
 
+  // Handle file change
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -477,12 +384,39 @@ function TreeBuilderInner() {
       reader.onload = (event) => {
         try {
           const data = JSON.parse(event.target?.result as string);
-          if (data.nodes && data.edges) {
-            setNodes(data.nodes);
-            setEdges(data.edges);
+
+          // Handle both old format (nodes/edges) and new format (nodes/links)
+          if (data.nodes) {
+            // Convert old format to new if necessary
+            const newNodes: PersonData[] = data.nodes.map((n: any) => ({
+              key: n.key || n.id,
+              name: n.data?.name || n.name,
+              role: n.data?.role || n.role,
+              department: n.data?.department || n.department,
+              email: n.data?.email || n.email,
+              phone: n.data?.phone || n.phone,
+              level: n.data?.level || n.level || "member",
+              loc: n.loc,
+            }));
+
+            const linksData = data.links || data.edges || [];
+            const newLinks: LinkData[] = linksData.map((l: any) => ({
+              key: l.key || l.id,
+              from: l.from || l.source,
+              to: l.to || l.target,
+              relationType:
+                l.relationType || l.data?.relationType || "reports_to",
+              label: l.label || l.data?.label,
+            }));
+
+            setNodes(newNodes);
+            setLinks(newLinks);
             saveState();
-            addToast("success", `Imported ${data.nodes.length} people`);
-            setTimeout(() => fitView({ padding: 0.2, duration: 500 }), 100);
+            addToast("success", `Imported ${newNodes.length} people`);
+            setTimeout(() => {
+              diagramRef.current?.applyLayout();
+              diagramRef.current?.zoomToFit();
+            }, 100);
           } else {
             addToast("error", "Invalid file format");
           }
@@ -496,10 +430,10 @@ function TreeBuilderInner() {
     e.target.value = "";
   };
 
-  const selectedNodeData = nodes.find((n) => n.id === selectedNode);
+  const selectedNodeData = nodes.find((n) => n.key === selectedNode);
 
   return (
-    <div className="w-screen h-screen bg-neutral-50 dark:bg-neutral-900">
+    <div className="w-screen h-screen bg-neutral-50 dark:bg-neutral-900 relative">
       <input
         type="file"
         ref={fileInputRef}
@@ -508,81 +442,57 @@ function TreeBuilderInner() {
         className="hidden"
       />
 
-      <ReactFlow
-        nodes={nodes}
-        edges={processedEdges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
-        onNodeClick={onNodeClick}
-        onPaneClick={onPaneClick}
-        onNodeDragStop={saveState}
-        nodeTypes={nodeTypes}
-        edgeTypes={edgeTypes}
-        fitView
-        proOptions={{ hideAttribution: true }}
-        className="bg-neutral-50 dark:bg-neutral-900"
-        deleteKeyCode={null}
-      >
-        <Background
-          color="#e5e5e5"
-          gap={24}
-          size={1}
-          className="dark:!opacity-20"
+      {/* GoJS Diagram */}
+      {nodes.length > 0 ? (
+        <DiagramWrapper
+          ref={diagramRef}
+          nodes={nodes}
+          links={links}
+          onNodeSelect={handleNodeSelect}
+          onModelChange={handleModelChange}
+          onLinkCreated={handleLinkCreated}
         />
-        <Controls className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl shadow-lg [&_button]:dark:bg-neutral-700 [&_button]:dark:text-neutral-100 [&_button]:dark:border-neutral-600 [&_button]:dark:hover:bg-neutral-600" />
-        <MiniMap
-          nodeColor={(node) => {
-            const level = node.data?.level as keyof typeof levelConfig;
-            return levelConfig[level]?.bgColor?.replace("bg-", "") || "#94a3b8";
-          }}
-          maskColor="rgba(0,0,0,0.08)"
-          className="bg-white! dark:bg-neutral-800! border! border-neutral-200! dark:border-neutral-700! rounded-xl! shadow-lg! [&_svg]:dark:!bg-neutral-700!"
-          pannable
-          zoomable
+      ) : (
+        <EmptyState onAddPerson={() => setIsAddModalOpen(true)} />
+      )}
+
+      {/* Toolbar - Top Left */}
+      <div className="absolute top-4 left-4 z-10">
+        <Toolbar
+          hasSelection={!!selectedNode}
+          onAddPerson={() => setIsAddModalOpen(true)}
+          onEditPerson={openEditModal}
+          onAddRelation={() => setIsRelationModalOpen(true)}
+          onDeletePerson={() => setIsDeleteConfirmOpen(true)}
+          onExportData={handleExportData}
+          onExportImage={handleExportImage}
+          onImport={handleImport}
+          onUndo={handleUndo}
+          onRedo={handleRedo}
+          onAutoLayout={handleAutoLayout}
+          onZoomToFit={handleZoomToFit}
+          canUndo={canUndo}
+          canRedo={canRedo}
+          nodeCount={nodes.length}
         />
+      </div>
 
-        {/* Toolbar */}
-        <Panel position="top-left">
-          <Toolbar
-            hasSelection={!!selectedNode}
-            onAddPerson={() => setIsAddModalOpen(true)}
-            onEditPerson={openEditModal}
-            onAddRelation={() => setIsRelationModalOpen(true)}
-            onDeletePerson={() => setIsDeleteConfirmOpen(true)}
-            onExport={handleExport}
-            onImport={handleImport}
-            onUndo={handleUndo}
-            onRedo={handleRedo}
-            onAutoLayout={handleAutoLayout}
-            canUndo={canUndo}
-            canRedo={canRedo}
-            nodeCount={nodes.length}
-          />
-        </Panel>
+      {/* Search & Legend - Top Right */}
+      <div className="absolute top-4 right-4 z-10 w-64">
+        <SearchPanel
+          nodes={nodes}
+          onNodeSelect={setSelectedNode}
+          onNodeFocus={handleNodeFocus}
+        />
+        <Legend />
+      </div>
 
-        {/* Legend */}
-        <Panel position="top-right">
-          <SearchPanel
-            nodes={nodes}
-            onNodeSelect={setSelectedNode}
-            onNodeFocus={handleNodeFocus}
-          />
-          <Legend />
-        </Panel>
-
-        {/* Selected Node Info */}
-        {selectedNodeData && (
-          <Panel position="bottom-left">
-            <NodeInfo data={selectedNodeData.data} />
-          </Panel>
-        )}
-
-        {/* Empty State */}
-        {nodes.length === 0 && (
-          <EmptyState onAddPerson={() => setIsAddModalOpen(true)} />
-        )}
-      </ReactFlow>
+      {/* Node Info - Bottom Left */}
+      {selectedNodeData && (
+        <div className="absolute bottom-4 left-4 z-10">
+          <NodeInfo data={selectedNodeData} />
+        </div>
+      )}
 
       {/* Dialogs */}
       <AddPersonDialog
@@ -618,9 +528,9 @@ function TreeBuilderInner() {
         setFormData={setFormData}
         onSubmit={handleAddRelation}
         nodes={nodes}
-        edges={edges}
+        links={links}
         selectedNodeId={selectedNode}
-        selectedNodeName={selectedNodeData?.data.name || ""}
+        selectedNodeName={selectedNodeData?.name || ""}
       />
 
       <ConfirmDialog
@@ -628,19 +538,11 @@ function TreeBuilderInner() {
         onClose={() => setIsDeleteConfirmOpen(false)}
         onConfirm={handleDeletePerson}
         title="Delete Person"
-        message={`Are you sure you want to delete "${selectedNodeData?.data.name}"? This will also remove all their connections.`}
+        message={`Are you sure you want to delete "${selectedNodeData?.name}"? This will also remove all their connections.`}
       />
 
       {/* Toast Notifications */}
       <ToastContainer toasts={toasts} onRemove={removeToast} />
     </div>
-  );
-}
-
-export default function TreeBuilder() {
-  return (
-    <ReactFlowProvider>
-      <TreeBuilderInner />
-    </ReactFlowProvider>
   );
 }

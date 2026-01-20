@@ -3,9 +3,9 @@
 import { useMemo } from "react";
 import { AlertCircle } from "lucide-react";
 import Modal from "@/components/ui/modal";
-import FormSelect from "@/components/custom/form/form-select";
+import FormSelect from "@/components/form/form-select";
 import Button from "@/components/ui/button";
-import { PersonFormData, TreeNode, TreeEdge } from "@/types/types";
+import { PersonFormData, PersonData, LinkData } from "@/types/types";
 import { relationOptions, relationConfig } from "@/types/constants";
 
 interface AddRelationDialogProps {
@@ -14,8 +14,8 @@ interface AddRelationDialogProps {
   formData: PersonFormData;
   setFormData: (data: PersonFormData) => void;
   onSubmit: () => void;
-  nodes: TreeNode[];
-  edges: TreeEdge[];
+  nodes: PersonData[];
+  links: LinkData[];
   selectedNodeId: string | null;
   selectedNodeName: string;
 }
@@ -27,7 +27,7 @@ export default function AddRelationDialog({
   setFormData,
   onSubmit,
   nodes,
-  edges,
+  links,
   selectedNodeId,
   selectedNodeName,
 }: AddRelationDialogProps) {
@@ -36,20 +36,20 @@ export default function AddRelationDialog({
     if (!selectedNodeId) return new Map<string, Set<string>>();
     const relations = new Map<string, Set<string>>();
 
-    edges.forEach((edge) => {
+    links.forEach((link) => {
       const otherNodeId =
-        edge.source === selectedNodeId
-          ? edge.target
-          : edge.target === selectedNodeId
-            ? edge.source
+        link.from === selectedNodeId
+          ? link.to
+          : link.to === selectedNodeId
+            ? link.from
             : null;
       if (otherNodeId) {
         if (!relations.has(otherNodeId)) relations.set(otherNodeId, new Set());
-        relations.get(otherNodeId)!.add(edge.data?.relationType || "");
+        relations.get(otherNodeId)!.add(link.relationType);
       }
     });
     return relations;
-  }, [edges, selectedNodeId]);
+  }, [links, selectedNodeId]);
 
   // Get available relation types for selected parent
   const availableRelationTypes = useMemo(() => {
@@ -65,17 +65,17 @@ export default function AddRelationDialog({
   // Available nodes with relation count info
   const availableNodes = useMemo(() => {
     return nodes
-      .filter((n) => n.id !== selectedNodeId)
+      .filter((n) => n.key !== selectedNodeId)
       .map((n) => {
-        const usedCount = existingRelations.get(n.id)?.size || 0;
+        const usedCount = existingRelations.get(n.key)?.size || 0;
         const allUsed = usedCount >= relationOptions.length;
         return {
-          value: n.id,
+          value: n.key,
           label: allUsed
-            ? `${n.data.name} (all relations used)`
+            ? `${n.name} (all relations used)`
             : usedCount > 0
-              ? `${n.data.name} (${usedCount} existing)`
-              : n.data.name,
+              ? `${n.name} (${usedCount} existing)`
+              : n.name,
           disabled: allUsed,
         };
       });
@@ -141,10 +141,10 @@ export default function AddRelationDialog({
                   options={availableRelationTypes}
                   required
                 />
-                <div className="p-3 rounded-lg bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700">
-                  <p className="text-sm text-neutral-600 dark:text-neutral-300">
+                <div className="p-3 rounded-lg bg-neutral-50 border border-neutral-200">
+                  <p className="text-sm text-neutral-600">
                     <span className="font-medium">
-                      {nodes.find((n) => n.id === formData.parentId)?.data.name}
+                      {nodes.find((n) => n.key === formData.parentId)?.name}
                     </span>
                     <span
                       className="mx-2 px-2 py-0.5 rounded text-xs font-medium"
@@ -163,7 +163,7 @@ export default function AddRelationDialog({
           </>
         )}
 
-        <div className="flex justify-end gap-3 pt-4 border-t border-neutral-100 dark:border-neutral-700">
+        <div className="flex justify-end gap-3 pt-4 border-t border-neutral-100">
           <Button type="button" variant="secondary" onClick={onClose}>
             Cancel
           </Button>

@@ -1,11 +1,5 @@
-import type { Node, Edge } from "@xyflow/react";
-
 export type NodeLevel = "executive" | "manager" | "lead" | "member";
 
-/**
- * Represents the relation type in the tree
- * in future the user will need to add relations types by themselves
- */
 export type RelationType =
   | "reports_to"
   | "manages"
@@ -13,9 +7,11 @@ export type RelationType =
   | "mentors";
 
 /**
- * Represents the data of a person in the tree.
+ * Represents the relation type in the tree
+ * in future the user will need to add relations types by themselves
  */
-export interface PersonData extends Record<string, unknown> {
+export interface PersonData {
+  key: string;
   name: string;
   role: string;
   department?: string;
@@ -23,6 +19,15 @@ export interface PersonData extends Record<string, unknown> {
   phone?: string;
   image?: string;
   level: NodeLevel;
+  loc?: string; // GoJS location string "x y"
+}
+
+export interface LinkData {
+  key: string;
+  from: string;
+  to: string;
+  relationType: RelationType;
+  label?: string;
 }
 
 /**
@@ -38,23 +43,8 @@ export interface PersonFormData {
   parentId: string;
   relationType: RelationType;
 }
-/**
- * Custom node data
- */
-export interface TreeNode extends Node<PersonData> {
-  type: string;
-}
 
-export interface TreeEdge extends Edge<{
-  relationType: RelationType;
-  label?: string;
-}> {
-  type: string;
-}
-
-export interface EdgeData {
-  relationType: RelationType;
-  label?: string;
-  edgeIndex?: number;
-  totalEdges?: number;
+export interface DiagramData {
+  nodes: PersonData[];
+  links: LinkData[];
 }

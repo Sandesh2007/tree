@@ -1,36 +1,34 @@
 "use client";
 
 import Modal from "@/components/ui/modal";
-import FormInput from "@/components/custom/form/form-input";
-import FormSelect from "@/components/custom/form/form-select";
+import FormInput from "@/components/form/form-input";
+import FormSelect from "@/components/form/form-select";
 import Button from "@/components/ui/button";
-import { PersonFormData, TreeNode } from "@/types/types";
-import { levelOptions, relationOptions } from "@/types/constants";
+import { PersonFormData } from "@/types/types";
+import { levelOptions } from "@/types/constants";
 
-interface AddNodeDialogProps {
+interface EditPersonDialogProps {
   isOpen: boolean;
   onClose: () => void;
   formData: PersonFormData;
   setFormData: (data: PersonFormData) => void;
   onSubmit: () => void;
-  nodes: TreeNode[];
 }
 
-export default function AddNodeDialog({
+export default function EditPersonDialog({
   isOpen,
   onClose,
   formData,
   setFormData,
   onSubmit,
-  nodes,
-}: AddNodeDialogProps) {
+}: EditPersonDialogProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit();
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Add New Person">
+    <Modal isOpen={isOpen} onClose={onClose} title="Edit Person">
       <form onSubmit={handleSubmit} className="space-y-4">
         <FormInput
           label="Full Name"
@@ -83,41 +81,11 @@ export default function AddNodeDialog({
           placeholder="Enter phone number"
         />
 
-        {nodes.length > 0 && (
-          <>
-            <FormSelect
-              label="Reports To"
-              value={formData.parentId}
-              onChange={(value) =>
-                setFormData({ ...formData, parentId: value })
-              }
-              options={[
-                { value: "", label: "None (Top Level)" },
-                ...nodes.map((n) => ({ value: n.id, label: n.data.name })),
-              ]}
-            />
-
-            {formData.parentId && (
-              <FormSelect
-                label="Relationship Type"
-                value={formData.relationType}
-                onChange={(value) =>
-                  setFormData({
-                    ...formData,
-                    relationType: value as PersonFormData["relationType"],
-                  })
-                }
-                options={relationOptions}
-              />
-            )}
-          </>
-        )}
-
         <div className="flex justify-end gap-3 pt-4">
           <Button type="button" variant="secondary" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="submit">Add Person</Button>
+          <Button type="submit">Save Changes</Button>
         </div>
       </form>
     </Modal>

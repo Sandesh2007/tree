@@ -1,7 +1,7 @@
 "use client";
 
 import Modal from "@/components/ui/modal";
-import FormSelect from "../form/form-select";
+import FormSelect from "../../form/form-select";
 import Button from "@/components/ui/button";
 import { PersonFormData, TreeNode } from "@/types/types";
 import { relationOptions } from "@/types/constants";
