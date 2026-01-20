@@ -85,8 +85,7 @@ const DiagramWrapper = forwardRef<DiagramRef, DiagramWrapperProps>(
         const toNode = link.toNode;
         if (fromNode && toNode) {
           onLinkCreated(fromNode.key as string, toNode.key as string);
-          // Remove the auto-created link, we'll add it through state
-          diagram.model.removeLinkData(link.data);
+          diagram.model.removeNodeData(link.data);
         }
       });
 

@@ -1,73 +1,70 @@
-"use client"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button2"
+"use client";
+import { cn } from "@/lib/utils";
+import Button from "@/components/ui/button";
 import {
   Field,
   FieldDescription,
   FieldGroup,
   FieldLabel,
   FieldSeparator,
-} from "@/components/ui/field"
-import { Loader2 } from "lucide-react"
-import { Input } from "@/components/ui/input"
+} from "@/components/ui/field";
+import { Loader2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { useState } from "react";
-import { toast } from "sonner"
-import axios from "axios"
-import { useRouter } from 'next/navigation'
+import { toast } from "sonner";
+import axios from "axios";
+import { useRouter } from "next/navigation";
 
 export function SignupForm({
   className,
   ...props
 }: React.ComponentProps<"form">) {
-
   const router = useRouter();
-  const[name, setName] = useState("");
-  const[email, setEmail] = useState("");
-  const[password, setPassword] = useState("");
-  const[confirmPassword, setConfirmPassword] = useState("");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  
-
-  const handleSubmit = async (e: React.FormEvent)=>{
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    if(password !== confirmPassword){
+    if (password !== confirmPassword) {
       toast.error("Password do not match. ");
-      setIsSubmitting(false)
+      setIsSubmitting(false);
       return;
     }
 
-    const formdata= {
-      name, email, password
-    }
+    const formdata = {
+      name,
+      email,
+      password,
+    };
 
-    try{
-      const response = await axios.post("/api/signup",formdata);
+    try {
+      const response = await axios.post("/api/signup", formdata);
 
-      if(response.data.success){
+      if (response.data.success) {
         toast.success("user created sucessfully");
-        setInterval(()=>{
+        setInterval(() => {
           router.push("/login");
-        })
+        });
       }
-
-
-
-    }catch(error){
-      toast.error("error during signup: ")
+    } catch (error) {
+      toast.error("error during signup: ");
       console.log("error during signup: ", error);
-
-    }finally{
+    } finally {
       setIsSubmitting(false);
     }
+  };
 
-
-  }
-  
   return (
-    <form className={cn("flex flex-col gap-6", className)} {...props} onSubmit={handleSubmit}>
+    <form
+      className={cn("flex flex-col gap-6", className)}
+      {...props}
+      onSubmit={handleSubmit}
+    >
       <FieldGroup>
         <div className="flex flex-col items-center gap-1 text-center">
           <h1 className="text-2xl font-bold">Create your account</h1>
@@ -81,36 +78,53 @@ export function SignupForm({
         </Field>
         <Field>
           <FieldLabel htmlFor="email">Email</FieldLabel>
-          <Input id="email" type="email" placeholder="m@example.com"
-          value={email} onChange={(e)=>setEmail(e.target.value)} required />
+          <Input
+            id="email"
+            type="email"
+            placeholder="m@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
           {/* <FieldDescription>
             We&apos;ll use this to contact you.
           </FieldDescription> */}
         </Field>
         <Field>
           <FieldLabel htmlFor="password">Password</FieldLabel>
-          <Input id="password" type="password" value={password} 
-          onChange={(e)=>setPassword(e.target.value)} required />
+          <Input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
           <FieldDescription>
             Must be at least 8 characters long.
           </FieldDescription>
         </Field>
         <Field>
           <FieldLabel htmlFor="confirm-password">Confirm Password</FieldLabel>
-          <Input id="confirm-password" type="password" 
-          value={confirmPassword} onChange={(e)=>setConfirmPassword(e.target.value)} required />
+          <Input
+            id="confirm-password"
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+          />
           <FieldDescription>Please confirm your password.</FieldDescription>
         </Field>
         <Field>
-          <Button type="submit"
-          disabled={isSubmitting}>
-            {isSubmitting? (
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? (
               <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
-              Creating Account...
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Creating Account...
               </>
-            ):("Create Account")}
-            </Button>
+            ) : (
+              "Create Account"
+            )}
+          </Button>
         </Field>
         <FieldSeparator>Or continue with</FieldSeparator>
         <Field>
@@ -129,5 +143,5 @@ export function SignupForm({
         </Field>
       </FieldGroup>
     </form>
-  )
+  );
 }

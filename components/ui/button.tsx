@@ -9,8 +9,14 @@ import {
 } from "@/components/ui/tooltip";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "secondary" | "destructive" | "ghost";
-  size?: "sm" | "md" | "lg";
+  variant?:
+    | "primary"
+    | "secondary"
+    | "outline"
+    | "destructive"
+    | "ghost"
+    | "link";
+  size?: "sm" | "md" | "lg" | "icon";
   tooltip?: string;
   children: React.ReactNode;
 }
@@ -35,16 +41,22 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         "bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 hover:bg-neutral-800 dark:hover:bg-neutral-200 focus:ring-neutral-900 dark:focus:ring-neutral-100 shadow-sm",
       secondary:
         "bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600 focus:ring-neutral-500 dark:focus:ring-neutral-400",
+      outline:
+        "border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50",
       destructive:
         "bg-red-500 dark:bg-red-600 text-white hover:bg-red-600 dark:hover:bg-red-700 focus:ring-red-500 dark:focus:ring-red-600 shadow-sm",
       ghost:
         "text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800 focus:ring-neutral-500 dark:focus:ring-neutral-400",
+      link: "text-primary underline-offset-4 hover:underline",
     };
 
     const sizes = {
       sm: "px-3 py-1.5 text-sm",
       md: "px-4 py-2 text-sm",
       lg: "px-6 py-3 text-base",
+      icon: "size-9",
+      "icon-sm": "size-8",
+      "icon-lg": "size-10",
     };
 
     return (

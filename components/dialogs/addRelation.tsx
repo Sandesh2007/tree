@@ -1,9 +1,9 @@
 "use client";
 
 import Modal from "@/components/ui/modal";
-import FormSelect from "../../form/form-select";
+import FormSelect from "@/components/form/form-select";
 import Button from "@/components/ui/button";
-import { PersonFormData, TreeNode } from "@/types/types";
+import { PersonFormData } from "@/types/types";
 import { relationOptions } from "@/types/constants";
 
 interface AddRelationDialogProps {
@@ -12,7 +12,7 @@ interface AddRelationDialogProps {
   formData: PersonFormData;
   setFormData: (data: PersonFormData) => void;
   onSubmit: () => void;
-  nodes: TreeNode[];
+  nodes: any[];
   selectedNodeId: string | null;
   selectedNodeName: string;
 }

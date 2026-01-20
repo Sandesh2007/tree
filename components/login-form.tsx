@@ -1,52 +1,46 @@
-"use client"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button2"
-import { Card, CardContent } from "@/components/ui/card"
+"use client";
+import { cn } from "@/lib/utils";
+import Button from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Field,
   FieldDescription,
   FieldGroup,
   FieldLabel,
   FieldSeparator,
-} from "@/components/ui/field"
-import { Loader2, TreePalmIcon } from "lucide-react"
-import { Input } from "@/components/ui/input"
-import { useState } from "react"
-import axios from "axios"
-import { toast } from "sonner"
+} from "@/components/ui/field";
+import { Loader2, TreePalmIcon, TrendingUpDown } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { useState } from "react";
+import axios from "axios";
+import { toast } from "sonner";
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const[email, setEmail] = useState("");
-  const[password, setPassword] = useState("")
-  const[isSubmitting, setIsSubmitting] = useState(false)
-
-  const handleSubmit = async(e:React.FormEvent)=>{
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    const formdata = {email, password}
+    const formdata = { email, password };
 
-    try{
+    try {
+      const response = await axios.post("/api/login", formdata);
 
-  
-        const response = await axios.post("/api/login",formdata);
-
-        if(response.data.success)
-        {
-          toast.success("logged in successfully")
-        }
-
-
-    }catch(error){
+      if (response.data.success) {
+        toast.success("logged in successfully");
+      }
+    } catch (error) {
       toast.error("Invalid credentials");
-    }finally{
+    } finally {
       setIsSubmitting(false);
     }
-}
+  };
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
@@ -57,7 +51,9 @@ export function LoginForm({
               <div className="flex flex-col items-center gap-2 text-center">
                 <h1 className="text-2xl font-bold">Welcome back</h1>
                 <p className="text-muted-foreground text-balance">
-                  Login to your <TreePalmIcon className= "  h-8 w-8 text-blue-500 inline-block"/> Tree Org account
+                  Login to your{" "}
+                  <TrendingUpDown className="h-5 w-5 text-blue-500 inline-block" />{" "}
+                  Tree Org account
                 </p>
               </div>
               <Field>
@@ -67,7 +63,7 @@ export function LoginForm({
                   type="email"
                   placeholder="m@example.com"
                   value={email}
-                  onChange={(e)=>setEmail(e.target.value)}
+                  onChange={(e) => setEmail(e.target.value)}
                   required
                 />
               </Field>
@@ -81,20 +77,25 @@ export function LoginForm({
                     Forgot your password?
                   </a>
                 </div>
-                <Input id="password" type="password"
-                value={password}
-                onChange={(e)=>setPassword(e.target.value)} required />
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
               </Field>
               <Field>
-                <Button type="submit"
-                disabled={isSubmitting}>
-                  {isSubmitting?(
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? (
                     <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
-                    loging...
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      loging...
                     </>
-                  ):("Login")}
-                  </Button>
+                  ) : (
+                    "Login"
+                  )}
+                </Button>
               </Field>
               <FieldSeparator className="*:data-[slot=field-separator-content]:bg-card">
                 Or continue with
@@ -147,5 +148,5 @@ export function LoginForm({
         and <a href="#">Privacy Policy</a>.
       </FieldDescription>
     </div>
-  )
+  );
 }

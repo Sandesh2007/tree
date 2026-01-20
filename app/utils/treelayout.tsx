@@ -1,5 +1,3 @@
-import { TreeNode, TreeEdge } from "@/types/types";
-
 interface LayoutOptions {
   nodeWidth?: number;
   nodeHeight?: number;
@@ -17,8 +15,8 @@ interface SubtreeInfo {
 }
 
 export function calculateTreeLayout(
-  nodes: TreeNode[],
-  edges: TreeEdge[],
+  nodes: any[],
+  edges: any[],
   options: LayoutOptions = {},
 ): Map<string, { x: number; y: number }> {
   const {
