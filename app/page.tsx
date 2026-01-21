@@ -545,6 +545,7 @@ export default function HomePage() {
             <div className="flex items-center gap-2">
               <TreePalmIcon className="h-6 w-6 text-blue-500" />
               <span className="font-semibold text-white">Tree Org</span>
+              <span>Made with ❤️ by Sandesh and Arjun</span>
             </div>
             <p className="text-sm text-slate-400">
               © 2026 Tree Org. All rights reserved.
