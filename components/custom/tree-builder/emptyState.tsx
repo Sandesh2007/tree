@@ -25,7 +25,7 @@ export default function EmptyState({ onAddPerson }: EmptyStateProps) {
   return (
     <div
       ref={containerRef}
-      className="absolute inset-0 flex items-center justify-center pointer-events-none"
+      className="absolute inset-0 flex items-center justify-center"
     >
       <div className="text-center bg-neutral-100 drop-shadow-lg border dark:bg-neutral-900 rounded-lg p-6 h-fit">
         <div className="w-20 h-20 rounded-2xl bg-neutral-50 dark:bg-neutral-900 border shadow-md flex items-center justify-center mx-auto mb-6">
@@ -39,9 +39,9 @@ export default function EmptyState({ onAddPerson }: EmptyStateProps) {
           family tree.
         </p>
         <Button
-          onClick={onAddPerson}
+          onClick={() => onAddPerson()}
           size="lg"
-          className="text-neutral-950 dark:text-neutral-50 bg-neutral-50 border shadow-lg dark:bg-neutral-800"
+          className="text-neutral-950 dark:text-neutral-50 bg-neutral-50 border shadow-lg dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700"
         >
           <Plus size={20} />
           Add First Person

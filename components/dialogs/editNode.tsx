@@ -1,8 +1,8 @@
 "use client";
 
 import Modal from "@/components/ui/modal";
-import FormInput from "@/components/form/form-input";
-import FormSelect from "@/components/form/form-select";
+import FormInput from "@/components/form/formInput";
+import FormSelect from "@/components/form/formSelect";
 import Button from "@/components/ui/button";
 import { PersonFormData } from "@/types/types";
 import { levelOptions } from "@/types/constants";
