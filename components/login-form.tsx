@@ -1,6 +1,6 @@
 "use client";
 import { cn } from "@/lib/utils";
-import Button from "@/components/ui/button";
+import {Button} from "@/components/ui/button2";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Field,
@@ -14,11 +14,14 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import axios from "axios";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -34,6 +37,8 @@ export function LoginForm({
 
       if (response.data.success) {
         toast.success("logged in successfully");
+        router.push("/canvas");
+
       }
     } catch (error) {
       toast.error("Invalid credentials");

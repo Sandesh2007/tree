@@ -1,0 +1,13 @@
+[33m3f1eef3[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m HEAD@{0}: rebase (finish): returning to refs/heads/main
+[33m3f1eef3[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m HEAD@{1}: rebase (continue): authentication added successfully
+[33m9088b5a[m HEAD@{2}: rebase (start): checkout origin/main
+[33m2e065ba[m HEAD@{3}: reset: moving to HEAD@{4}
+[33m9088b5a[m HEAD@{4}: reset: moving to HEAD
+[33m9088b5a[m HEAD@{5}: rebase (finish): returning to refs/heads/main
+[33m9088b5a[m HEAD@{6}: rebase (start): checkout origin/main
+[33m2e065ba[m HEAD@{7}: reset: moving to HEAD
+[33m2e065ba[m HEAD@{8}: commit: authentication added successfully
+[33md707687[m HEAD@{9}: pull: Fast-forward
+[33m3d2d40a[m HEAD@{10}: commit (merge): Merge branch 'main' of https://github.com/Sandesh2007/tree
+[33m58a814a[m HEAD@{11}: commit: login and signup page created
+[33md73619a[m HEAD@{12}: clone: from https://github.com/Sandesh2007/tree.git
