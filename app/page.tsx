@@ -547,7 +547,7 @@ export default function HomePage() {
               <span className="font-semibold text-white">Tree Org</span>
             </div>
             <p className="text-sm text-slate-400">
-              © 2024 Tree Org. All rights reserved.
+              © 2026 Tree Org. All rights reserved.
             </p>
             <div className="flex gap-6 text-sm text-slate-400">
               <a href="#" className="hover:text-white">
