@@ -3,7 +3,7 @@
 import Modal from "@/components/ui/modal";
 import FormSelect from "@/components/form/form-select";
 import Button from "@/components/ui/button";
-import { PersonFormData } from "@/types/types";
+import { PersonFormData, PersonData } from "@/types/types";
 import { relationOptions } from "@/types/constants";
 
 interface AddRelationDialogProps {
@@ -12,7 +12,7 @@ interface AddRelationDialogProps {
   formData: PersonFormData;
   setFormData: (data: PersonFormData) => void;
   onSubmit: () => void;
-  nodes: any[];
+  nodes: PersonData[];
   selectedNodeId: string | null;
   selectedNodeName: string;
 }
@@ -32,7 +32,7 @@ export default function AddRelationDialog({
     onSubmit();
   };
 
-  const availableNodes = nodes.filter((n) => n.id !== selectedNodeId);
+  const availableNodes = nodes.filter((n) => n.key !== selectedNodeId);
 
   return (
     <Modal
@@ -47,7 +47,7 @@ export default function AddRelationDialog({
           onChange={(value) => setFormData({ ...formData, parentId: value })}
           options={[
             { value: "", label: "Select a person..." },
-            ...availableNodes.map((n) => ({ value: n.id, label: n.data.name })),
+            ...availableNodes.map((n) => ({ value: n.key, label: n.name })),
           ]}
           required
           placeholder="Select a person..."

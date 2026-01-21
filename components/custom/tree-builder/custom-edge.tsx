@@ -1,11 +1,35 @@
 "use client";
 
-import { BaseEdge, EdgeLabelRenderer, getSmoothStepPath } from "@xyflow/react";
+import {
+  BaseEdge,
+  EdgeLabelRenderer,
+  getSmoothStepPath,
+  Position,
+} from "@xyflow/react";
 import { relationConfig } from "@/types/constants";
 import { RelationType } from "@/types/types";
 
+interface CustomEdgeData {
+  relationType?: RelationType;
+  label?: string;
+  edgeIndex?: number;
+  totalEdges?: number;
+}
+
+interface CustomEdgeProps {
+  id: string;
+  sourceX: number;
+  sourceY: number;
+  targetX: number;
+  targetY: number;
+  sourcePosition: Position;
+  targetPosition: Position;
+  data?: CustomEdgeData;
+  markerEnd?: string;
+  selected?: boolean;
+}
+
 export default function CustomEdge({
-  id,
   sourceX,
   sourceY,
   targetX,
@@ -15,7 +39,7 @@ export default function CustomEdge({
   data,
   markerEnd,
   selected,
-}: any) {
+}: CustomEdgeProps) {
   const relationType = (data?.relationType as RelationType) || "reports_to";
   const config = relationConfig[relationType];
 

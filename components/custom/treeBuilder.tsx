@@ -22,8 +22,45 @@ import {
   LinkData,
   PersonFormData,
   RelationType,
+  NodeLevel,
 } from "@/types/types";
 import { relationConfig } from "@/types/constants";
+
+// Types for importing JSON data (handles both old and new formats)
+interface ImportNodeData {
+  key?: string;
+  id?: string;
+  name?: string;
+  role?: string;
+  department?: string;
+  email?: string;
+  phone?: string;
+  level?: NodeLevel;
+  loc?: string;
+  data?: {
+    name?: string;
+    role?: string;
+    department?: string;
+    email?: string;
+    phone?: string;
+    level?: NodeLevel;
+  };
+}
+
+interface ImportLinkData {
+  key?: string;
+  id?: string;
+  from?: string;
+  source?: string;
+  to?: string;
+  target?: string;
+  relationType?: RelationType;
+  label?: string;
+  data?: {
+    relationType?: RelationType;
+    label?: string;
+  };
+}
 
 // Dynamic import to avoid SSR issues with GoJS
 const DiagramWrapper = dynamic(
@@ -122,7 +159,7 @@ export default function TreeBuilder() {
 
   // Save state for undo/redo
   const saveState = useCallback(() => {
-    pushState(nodes as any, links as any);
+    pushState(nodes, links);
   }, [nodes, links, pushState]);
 
   // Handle node selection from diagram
@@ -388,19 +425,21 @@ export default function TreeBuilder() {
           // Handle both old format (nodes/edges) and new format (nodes/links)
           if (data.nodes) {
             // Convert old format to new if necessary
-            const newNodes: PersonData[] = data.nodes.map((n: any) => ({
-              key: n.key || n.id,
-              name: n.data?.name || n.name,
-              role: n.data?.role || n.role,
-              department: n.data?.department || n.department,
-              email: n.data?.email || n.email,
-              phone: n.data?.phone || n.phone,
-              level: n.data?.level || n.level || "member",
-              loc: n.loc,
-            }));
+            const newNodes: PersonData[] = data.nodes.map(
+              (n: ImportNodeData) => ({
+                key: n.key || n.id,
+                name: n.data?.name || n.name,
+                role: n.data?.role || n.role,
+                department: n.data?.department || n.department,
+                email: n.data?.email || n.email,
+                phone: n.data?.phone || n.phone,
+                level: n.data?.level || n.level || "member",
+                loc: n.loc,
+              }),
+            );
 
             const linksData = data.links || data.edges || [];
-            const newLinks: LinkData[] = linksData.map((l: any) => ({
+            const newLinks: LinkData[] = linksData.map((l: ImportLinkData) => ({
               key: l.key || l.id,
               from: l.from || l.source,
               to: l.to || l.target,

@@ -1,3 +1,17 @@
+import { Node, Edge } from "@xyflow/react";
+import { RelationType, NodeLevel } from "@/types/types";
+
+interface NodeData {
+  name?: string;
+  level?: NodeLevel | string;
+  [key: string]: unknown;
+}
+
+interface EdgeData {
+  relationType?: RelationType | string;
+  [key: string]: unknown;
+}
+
 interface LayoutOptions {
   nodeWidth?: number;
   nodeHeight?: number;
@@ -15,8 +29,8 @@ interface SubtreeInfo {
 }
 
 export function calculateTreeLayout(
-  nodes: any[],
-  edges: any[],
+  nodes: Node<NodeData>[],
+  edges: Edge<EdgeData>[],
   options: LayoutOptions = {},
 ): Map<string, { x: number; y: number }> {
   const {
@@ -29,7 +43,6 @@ export function calculateTreeLayout(
   } = options;
 
   const levelHeight = nodeHeight + verticalSpacing;
-  const levelWidth = nodeWidth + horizontalSpacing;
 
   // Build parent-child relationships
   const childrenMap = new Map<string, string[]>();
@@ -61,8 +74,8 @@ export function calculateTreeLayout(
     children.sort((a, b) => {
       const nodeA = nodes.find((n) => n.id === a);
       const nodeB = nodes.find((n) => n.id === b);
-      const levelA = levelOrder[nodeA?.data?.level || "member"] ?? 4;
-      const levelB = levelOrder[nodeB?.data?.level || "member"] ?? 4;
+      const levelA = levelOrder[nodeA?.data?.level || "unknown"] ?? 4;
+      const levelB = levelOrder[nodeB?.data?.level || "unknown"] ?? 4;
       return (
         levelA - levelB ||
         (nodeA?.data?.name || "").localeCompare(nodeB?.data?.name || "")

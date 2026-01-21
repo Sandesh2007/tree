@@ -1,8 +1,33 @@
 "use client";
 
-import { BaseEdge, EdgeLabelRenderer, getSmoothStepPath } from "@xyflow/react";
+import {
+  BaseEdge,
+  EdgeLabelRenderer,
+  getSmoothStepPath,
+  Position,
+} from "@xyflow/react";
 import { relationConfig } from "@/types/constants";
 import { RelationType } from "@/types/types";
+
+interface CustomEdgeData {
+  relationType?: RelationType;
+  label?: string;
+  edgeIndex?: number;
+  totalEdges?: number;
+}
+
+interface CustomEdgeProps {
+  id: string;
+  sourceX: number;
+  sourceY: number;
+  targetX: number;
+  targetY: number;
+  sourcePosition: Position;
+  targetPosition: Position;
+  data?: CustomEdgeData;
+  markerEnd?: string;
+  selected?: boolean;
+}
 
 export default function CustomEdge({
   sourceX,
@@ -14,13 +39,13 @@ export default function CustomEdge({
   data,
   markerEnd,
   selected,
-}: any) {
-  const relationType = (data?.relationType as RelationType) || "reports_to";
+}: CustomEdgeProps) {
+  const relationType = data?.relationType || "reports_to";
   const config = relationConfig[relationType];
 
   // Calculate offset for multiple edges between same nodes
-  const edgeIndex = data?.edgeIndex || 0;
-  const totalEdges = data?.totalEdges || 1;
+  const edgeIndex = data?.edgeIndex ?? 0;
+  const totalEdges = data?.totalEdges ?? 1;
   const offsetMultiplier = 50;
   const baseOffset = (edgeIndex - (totalEdges - 1) / 2) * offsetMultiplier;
 

@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { PersonData, LinkData } from "@/types/types";
 
 interface HistoryState {
-  nodes: any[];
-  edges: any[];
+  nodes: PersonData[];
+  edges: LinkData[];
 }
 
 export function useHistory() {
@@ -12,7 +13,7 @@ export function useHistory() {
   const [currentIndex, setCurrentIndex] = useState(-1);
 
   const pushState = useCallback(
-    (nodes: any[], edges: any[]) => {
+    (nodes: PersonData[], edges: LinkData[]) => {
       setHistory((prev) => {
         const newHistory = prev.slice(0, currentIndex + 1);
         newHistory.push({
