@@ -1,6 +1,6 @@
 "use client";
 import { cn } from "@/lib/utils";
-import {Button} from "@/components/ui/button2";
+import { Button } from "@/components/ui/button2";
 import {
   Field,
   FieldDescription,
@@ -47,9 +47,7 @@ export function SignupForm({
 
       if (response.data.success) {
         toast.success("user created sucessfully");
-        setInterval(() => {
-          router.push("/login");
-        });
+        router.push("/login");
       }
     } catch (error) {
       toast.error("error during signup: ");
@@ -74,7 +72,14 @@ export function SignupForm({
         </div>
         <Field>
           <FieldLabel htmlFor="name">Full Name</FieldLabel>
-          <Input id="name" type="text" placeholder="John Doe" required />
+          <Input
+            id="name"
+            type="text"
+            placeholder="John Doe"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+          />
         </Field>
         <Field>
           <FieldLabel htmlFor="email">Email</FieldLabel>
