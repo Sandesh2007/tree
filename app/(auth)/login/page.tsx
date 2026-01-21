@@ -177,7 +177,7 @@ export default function LoginPage() {
         </div>
 
         {/* Login Form Container */}
-        <div className="mx-auto w-full max-w-5xl">
+        <div className="mx-auto w-md max-w-5xl">
           <LoginForm />
         </div>
 
