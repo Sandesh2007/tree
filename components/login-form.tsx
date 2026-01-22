@@ -41,11 +41,22 @@ export function LoginForm({
         }, 1000);
       }
     } catch (error: any) {
-      const errorMessage =
-        error.response?.data?.message ||
-        "Invalid credentials. Please try again.";
-      toast.error(errorMessage);
-      console.error("Login error:", error);
+      if(error.response){
+        //toast.error("Internal server error")
+
+        if(error.response.status == 401){
+          toast.error(error.response?.data.message || "Invalid Credentials. Please try again.");
+
+        }else{
+          toast.error(error.response.data.message || "Internal Server error");
+        }
+
+       
+      }
+      else{
+        toast.error("Unable to connect to the Server");
+      }
+    
     } finally {
       setIsSubmitting(false);
     }

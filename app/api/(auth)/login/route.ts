@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     const hashedPassword = result.records[0].get("hashedPassword");
 
     const isPasswordValid = await bcrypt.compare(password, hashedPassword);
-    console.log("step 3");
+   
 
     if (!isPasswordValid) {
       return NextResponse.json(
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     }
 
     const token = generateToken(email);
-    console.log("step 5");
+    
     const response = NextResponse.json(
       {
         message: "Logged In successfully",
