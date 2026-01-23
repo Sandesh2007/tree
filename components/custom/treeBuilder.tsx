@@ -79,9 +79,20 @@ const initialFormData: PersonFormData = {
   relationType: "reports_to",
 };
 
-export default function TreeBuilder() {
-  const [nodes, setNodes] = useState<PersonData[]>([]);
-  const [links, setLinks] = useState<LinkData[]>([]);
+interface TreeBuilderProps {
+  initialData?: {
+    nodes: PersonData[];
+    links: LinkData[];
+  };
+  onDataChange?: (data: { nodes: PersonData[]; links: LinkData[] }) => void;
+}
+
+export default function TreeBuilder({
+  initialData,
+  onDataChange,
+}: TreeBuilderProps = {}) {
+  const [nodes, setNodes] = useState<PersonData[]>(initialData?.nodes || []);
+  const [links, setLinks] = useState<LinkData[]>(initialData?.links || []);
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
   const [layoutDirection, setLayoutDirection] = useState<"TB" | "LR">("TB");
 
@@ -157,6 +168,13 @@ export default function TreeBuilder() {
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [selectedNode, handleUndo, handleRedo]);
+
+  // Notify parent of data changes
+  useEffect(() => {
+    if (onDataChange) {
+      onDataChange({ nodes, links });
+    }
+  }, [nodes, links, onDataChange]);
 
   // Save state for undo/redo
   const saveState = useCallback(() => {
