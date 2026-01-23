@@ -5,6 +5,7 @@ import { X, Plus, Trash2, Save, Loader2, Settings } from "lucide-react";
 import { CustomLevel, CustomRelation } from "@/types/types";
 import axios from "axios";
 import { toast } from "sonner";
+import Button from "../ui/button";
 
 interface ConfigModalProps {
   isOpen: boolean;
@@ -176,15 +177,15 @@ export default function ConfigModal({
 
       {/* Modal */}
       <div className="flex min-h-screen items-center justify-center p-4">
-        <div className="relative w-full max-w-4xl bg-white dark:bg-gray-800 rounded-xl shadow-2xl">
+        <div className="relative w-full max-w-4xl bg-white dark:bg-neutral-800 rounded-xl shadow-2xl">
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
+              <div className="p-2 bg-neutral-100 dark:bg-neutral-900 rounded-lg">
                 <Settings className="h-6 w-6 text-blue-600 dark:text-blue-300" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                <h2 className="text-2xl font-bold text-neutral-900 dark:text-white">
                   Configuration Settings
                 </h2>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -192,40 +193,43 @@ export default function ConfigModal({
                 </p>
               </div>
             </div>
-            <button
+            <Button
               onClick={onClose}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              variant="ghost"
+              className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg transition-colors"
             >
               <X className="h-6 w-6 text-gray-500 dark:text-gray-400" />
-            </button>
+            </Button>
           </div>
 
           {/* Tabs */}
           <div className="flex border-b border-gray-200 dark:border-gray-700">
-            <button
+            <Button
+              variant="ghost"
               onClick={() => setActiveTab("levels")}
-              className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
+              className={`flex-1 p-6 outline-0 rounded-none py-4 text-sm font-medium transition-colors ${
                 activeTab === "levels"
                   ? "text-blue-600 border-b-2 border-blue-600"
                   : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
               }`}
             >
               Custom Levels ({customLevels.length})
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="ghost"
               onClick={() => setActiveTab("relations")}
-              className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
+              className={`flex-1 p-4 text-sm rounded-none font-medium transition-colors ${
                 activeTab === "relations"
                   ? "text-blue-600 border-b-2 border-blue-600"
                   : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
               }`}
             >
               Custom Relations ({customRelations.length})
-            </button>
+            </Button>
           </div>
 
           {/* Content */}
-          <div className="p-6 max-h-[600px] overflow-y-auto">
+          <div className="p-6 max-h-150 overflow-y-auto">
             {isLoading ? (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
@@ -233,8 +237,8 @@ export default function ConfigModal({
             ) : activeTab === "levels" ? (
               <div className="space-y-6">
                 {/* Add New Level Form */}
-                <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-6 border border-blue-200 dark:border-blue-800">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <div className="bg-blue-50 dark:bg-neutral-900/20 rounded-lg p-6 border border-blue-200 dark:border-blue-800">
+                  <h3 className="text-lg font-semibold text-neutral-900 dark:text-white mb-4 flex items-center gap-2">
                     <Plus className="h-5 w-5" />
                     Add New Custom Level
                   </h3>
@@ -255,7 +259,7 @@ export default function ConfigModal({
                           })
                         }
                         placeholder="e.g., senior_developer"
-                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-neutral-700 dark:text-white"
                       />
                     </div>
                     <div>
@@ -269,7 +273,7 @@ export default function ConfigModal({
                           setNewLevel({ ...newLevel, label: e.target.value })
                         }
                         placeholder="e.g., Senior Developer"
-                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-neutral-700 dark:text-white"
                       />
                     </div>
                     <div>
@@ -291,7 +295,7 @@ export default function ConfigModal({
                           onChange={(e) =>
                             setNewLevel({ ...newLevel, color: e.target.value })
                           }
-                          className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-neutral-700 dark:text-white"
                         />
                       </div>
                     </div>
@@ -320,7 +324,7 @@ export default function ConfigModal({
                               bgColor: e.target.value,
                             })
                           }
-                          className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-neutral-700 dark:text-white"
                         />
                       </div>
                     </div>
@@ -349,17 +353,17 @@ export default function ConfigModal({
                               borderColor: e.target.value,
                             })
                           }
-                          className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-neutral-700 dark:text-white"
                         />
                       </div>
                     </div>
                     <div className="flex items-end">
-                      <button
+                      <Button
                         onClick={handleAddLevel}
                         disabled={
                           isSaving || !newLevel.value || !newLevel.label
                         }
-                        className="w-full px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                        className="w-full px-6 py-2 bg-neutral-600 text-white rounded-lg hover:bg-neutral-700 disabled:bg-neutral-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
                       >
                         {isSaving ? (
                           <>
@@ -372,7 +376,7 @@ export default function ConfigModal({
                             Add Level
                           </>
                         )}
-                      </button>
+                      </Button>
                     </div>
                   </div>
                   {/* Preview */}
@@ -409,7 +413,7 @@ export default function ConfigModal({
                       {customLevels.map((level) => (
                         <div
                           key={level.id}
-                          className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600"
+                          className="flex items-center justify-between p-4 bg-neutral-50 dark:bg-neutral-700 rounded-lg border border-gray-200 dark:border-neutral-600"
                         >
                           <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
@@ -423,21 +427,22 @@ export default function ConfigModal({
                               >
                                 {level.label}
                               </span>
-                              <code className="text-sm text-gray-600 dark:text-gray-400">
+                              <code className="text-sm text-neutral-600 dark:text-neutral-400">
                                 {level.value}
                               </code>
                             </div>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                            <p className="text-xs text-neutral-500 dark:text-neutral-400">
                               Created:{" "}
                               {new Date(level.createdAt).toLocaleDateString()}
                             </p>
                           </div>
-                          <button
+                          <Button
+                            variant="destructive"
                             onClick={() => handleDeleteLevel(level.id)}
-                            className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                            className="p-2 rounded-lg transition-colors"
                           >
                             <Trash2 className="h-5 w-5" />
-                          </button>
+                          </Button>
                         </div>
                       ))}
                     </div>
@@ -447,8 +452,8 @@ export default function ConfigModal({
             ) : (
               <div className="space-y-6">
                 {/* Add New Relation Form */}
-                <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-6 border border-green-200 dark:border-green-800">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <div className="bg-green-50 dark:bg-neutral-900/20 rounded-lg p-6 border border-green-200 dark:border-green-800">
+                  <h3 className="text-lg font-semibold text-neutral-900 dark:text-white mb-4 flex items-center gap-2">
                     <Plus className="h-5 w-5" />
                     Add New Custom Relation
                   </h3>
@@ -469,7 +474,7 @@ export default function ConfigModal({
                           })
                         }
                         placeholder="e.g., supervises"
-                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-neutral-700 dark:text-white"
                       />
                     </div>
                     <div>
@@ -486,7 +491,7 @@ export default function ConfigModal({
                           })
                         }
                         placeholder="e.g., Supervises"
-                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-neutral-700 dark:text-white"
                       />
                     </div>
                     <div>
@@ -514,7 +519,7 @@ export default function ConfigModal({
                               color: e.target.value,
                             })
                           }
-                          className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-neutral-700 dark:text-white"
                         />
                       </div>
                     </div>
@@ -532,7 +537,7 @@ export default function ConfigModal({
                               dashed: e.target.checked,
                             })
                           }
-                          className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                          className="w-5 h-5 text-blue-600 border-neutral-300 rounded focus:ring-blue-500"
                         />
                         <span className="text-sm text-gray-700 dark:text-gray-300">
                           Dashed line
@@ -540,7 +545,7 @@ export default function ConfigModal({
                       </label>
                     </div>
                     <div className="md:col-span-2">
-                      <button
+                      <Button
                         onClick={handleAddRelation}
                         disabled={
                           isSaving || !newRelation.value || !newRelation.label
@@ -558,7 +563,7 @@ export default function ConfigModal({
                             Add Relation
                           </>
                         )}
-                      </button>
+                      </Button>
                     </div>
                   </div>
                   {/* Preview */}
@@ -601,7 +606,7 @@ export default function ConfigModal({
                       {customRelations.map((relation) => (
                         <div
                           key={relation.id}
-                          className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600"
+                          className="flex items-center justify-between p-4 bg-neutral-50 dark:bg-neutral-700 rounded-lg border border-gray-200 dark:border-gray-600"
                         >
                           <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
@@ -632,12 +637,13 @@ export default function ConfigModal({
                               ).toLocaleDateString()}
                             </p>
                           </div>
-                          <button
+                          <Button
+                            variant="destructive"
                             onClick={() => handleDeleteRelation(relation.id)}
-                            className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                            className="p-2 rounded-lg transition-colors"
                           >
                             <Trash2 className="h-5 w-5" />
-                          </button>
+                          </Button>
                         </div>
                       ))}
                     </div>
@@ -649,12 +655,12 @@ export default function ConfigModal({
 
           {/* Footer */}
           <div className="flex justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700">
-            <button
+            <Button
               onClick={onClose}
               className="px-6 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
             >
               Close
-            </button>
+            </Button>
           </div>
         </div>
       </div>

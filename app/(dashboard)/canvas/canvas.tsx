@@ -3,9 +3,10 @@ import TreeBuilder from "@/components/custom/treeBuilder";
 import { useEffect, useState, useCallback, useRef } from "react";
 import axios from "axios";
 import { toast } from "sonner";
-import { Loader2, Lock, Globe, Save } from "lucide-react";
+import { Loader2, Lock, Globe, Save, Trash2 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { DiagramData } from "@/types/types";
+import Button from "@/components/ui/button";
 
 export default function Canvas() {
   const [isLoading, setIsLoading] = useState(true);
@@ -223,7 +224,7 @@ export default function Canvas() {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Header with controls */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-3 flex items-center justify-between">
+      <div className="bg-neutral-50 dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700 px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-4">
           {isEditingName ? (
             <input
@@ -239,11 +240,11 @@ export default function Canvas() {
                 }
               }}
               autoFocus
-              className="text-xl font-semibold text-gray-900 dark:text-white bg-transparent border-b-2 border-blue-500 focus:outline-none"
+              className="text-xl font-semibold text-neutral-900 dark:text-white bg-transparent border-b-2 border-blue-500 focus:outline-none"
             />
           ) : (
             <h1
-              className="text-xl font-semibold text-gray-900 dark:text-white cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+              className="text-xl font-semibold text-neutral-900 dark:text-white cursor-pointer hover:text-neutral-600 dark:hover:text-neutral-400 transition-colors"
               onClick={() => setIsEditingName(true)}
               title="Click to rename"
             >
@@ -283,26 +284,27 @@ export default function Canvas() {
           </div>
 
           {/* Manual save button */}
-          <button
+          <Button
+            variant="primary"
             onClick={handleManualSave}
             disabled={isSaving || (!hasUnsavedChanges && lastSaved !== null)}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
               isSaving || (!hasUnsavedChanges && lastSaved !== null)
-                ? "bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-700 dark:text-gray-500"
-                : "bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300"
+                ? " text-neutral-400 cursor-not-allowed dark:bg-neutral-700 dark:text-neutral-500"
+                : " text-neutral-50 dark:text-neutral-950"
             }`}
           >
             <Save className="h-4 w-4" />
             <span>Save</span>
-          </button>
+          </Button>
 
-          {/* Visibility toggle */}
-          <button
+          <Button
+            variant="primary"
             onClick={toggleVisibility}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
               isPublic
-                ? "bg-green-100 text-green-700  hover:bg-green-200 dark:bg-green-900 dark:text-green-300"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300"
+                ? "bg-green-500 hover:bg-green-600 dark:bg-green-500 dark:hover:bg-green-600 text-white dark:text-white"
+                : "bg-neutral-500 hover:bg-neutral-600 dark:bg-neutral-500 dark:hover:bg-neutral-600 text-white dark:text-white"
             }`}
           >
             {isPublic ? (
@@ -316,23 +318,24 @@ export default function Canvas() {
                 <span>Private</span>
               </>
             )}
-          </button>
+          </Button>
 
-          {/* Delete canvas */}
-          <button
+          <Button
+            variant="destructive"
             onClick={handleDeleteCanvas}
-            className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 border border-red-300 rounded-lg hover:bg-red-100 dark:bg-red-900/20 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-900/30 transition-colors"
+            className="px-4 py-2 text-sm font-medium"
           >
+            <Trash2 className="h-4 w-4" />
             Delete Canvas
-          </button>
+          </Button>
 
-          {/* Back to dashboard */}
-          <button
+          <Button
+            variant="secondary"
             onClick={() => router.push("/dashboard")}
             className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600"
           >
             Back to Dashboard
-          </button>
+          </Button>
         </div>
       </div>
 

@@ -25,6 +25,7 @@ import { PersonData, NodeLevel } from "@/types/types";
 import NodeModal, { type NodeFormData } from "@/components/dialogs/node-modal";
 import ConfigModal from "@/components/dialogs/config-modal";
 import { generateCanvasId } from "@/lib/utils";
+import Button from "@/components/ui/button";
 
 interface NodeWithConnections extends PersonData {
   connections?: number;
@@ -123,6 +124,7 @@ export default function DashboardPage() {
       }
     } catch (error) {
       toast.error("Failed to rename canvas");
+      console.error("Error while renaming canvas", error);
     }
   };
 
@@ -144,6 +146,7 @@ export default function DashboardPage() {
       }
     } catch (error) {
       toast.error("Failed to delete canvas");
+      console.error("Error while deleting canvas", error);
     }
   };
 
@@ -163,6 +166,56 @@ export default function DashboardPage() {
       setIsModalOpen(true);
     }
   };
+  const statsCards = [
+    {
+      id: "total-nodes",
+      label: "Total Nodes",
+      value: nodes.length,
+      icon: Users,
+      iconBg: "bg-blue-100 dark:bg-blue-900",
+      iconColor: "text-blue-600 dark:text-blue-300",
+      cardBg:
+        "bg-neutral-50 dark:bg-neutral-800 border border-gray-200 dark:border-gray-700",
+    },
+    {
+      id: "connections",
+      label: "Connections",
+      value: connectedNodes.length,
+      icon: Network,
+      iconBg: "bg-green-100 dark:bg-green-900",
+      iconColor: "text-green-600 dark:text-green-300",
+      cardBg:
+        "bg-neutral-50 dark:bg-neutral-800 border border-gray-200 dark:border-gray-700",
+    },
+    {
+      id: "canvases",
+      label: "My Canvases",
+      value: canvases.length,
+      icon: Layers,
+      iconBg: "bg-purple-100 dark:bg-purple-900",
+      iconColor: "text-purple-600 dark:text-purple-300",
+      cardBg:
+        "bg-neutral-50 dark:bg-neutral-800 border border-gray-200 dark:border-gray-700",
+    },
+    {
+      id: "add-node",
+      label: "Create New",
+      title: "Node",
+      icon: Plus,
+      cardBg:
+        "bg-neutral-50 dark:bg-neutral-800 border border-gray-200 dark:border-gray-700",
+      onClick: handleCreateNode,
+    },
+    {
+      id: "add-canvas",
+      label: "Create New",
+      title: "Canvas",
+      icon: Plus,
+      cardBg:
+        "bg-neutral-50 dark:bg-neutral-800 border border-gray-200 dark:border-gray-700",
+      onClick: handleCreateCanvas,
+    },
+  ];
 
   const handleSaveNode = async (nodeData: NodeFormData) => {
     try {
@@ -261,7 +314,7 @@ export default function DashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+      <div className="flex items-center justify-center min-h-screen bg-neutral-50 dark:bg-neutral-900">
         <div className="text-center">
           <Loader2 className="animate-spin h-12 w-12 text-blue-600 mx-auto mb-4" />
           <p className="text-gray-600 dark:text-gray-300">
@@ -280,109 +333,68 @@ export default function DashboardPage() {
         : [];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <div className="min-h-screen bg-neutral-50 dark:bg-neutral-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
+            <h1 className="text-4xl font-bold text-neutrals-900 dark:text-white mb-2">
               Dashboard
             </h1>
             <p className="text-gray-600 dark:text-gray-300">
               Manage your organization tree and connections
             </p>
           </div>
-          <button
+          <Button
+            variant="outline"
             onClick={() => setIsConfigModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl"
+            className="flex items-center text-neutral-900 dark:text-white gap-2 px-4 py-2 transition-all shadow-lg hover:shadow-xl"
           >
             <Settings className="h-5 w-5" />
             <span className="font-medium">Settings</span>
-          </button>
+          </Button>
         </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-shadow">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                  Total Nodes
-                </p>
-                <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
-                  {nodes.length}
-                </p>
+          {statsCards.map((card) => {
+            const Icon = card.icon;
+            return (
+              <div
+                key={card.id}
+                className={`${card.cardBg} rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow`}
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                      {card.label}
+                    </p>
+                    {card.title && (
+                      <p className="text-2xl font-bold text-neutral-600 dark:text-neutral-50">
+                        {card.title}
+                      </p>
+                    )}
+                    <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
+                      {card.value}
+                    </p>
+                  </div>
+                  {card.onClick ? (
+                    <Button onClick={card.onClick}>
+                      <Icon className={`h-8 w-8 ${card.iconColor}`} />
+                    </Button>
+                  ) : (
+                    <div className={`${card.iconBg} p-3 rounded-lg`}>
+                      <Icon className={`h-8 w-8 ${card.iconColor}`} />
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="bg-blue-100 dark:bg-blue-900 p-3 rounded-lg">
-                <Users className="h-8 w-8 text-blue-600 dark:text-blue-300" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-shadow">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                  Connections
-                </p>
-                <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
-                  {connectedNodes.length}
-                </p>
-              </div>
-              <div className="bg-green-100 dark:bg-green-900 p-3 rounded-lg">
-                <Network className="h-8 w-8 text-green-600 dark:text-green-300" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-shadow">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                  My Canvases
-                </p>
-                <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
-                  {canvases.length}
-                </p>
-              </div>
-              <div className="bg-purple-100 dark:bg-purple-900 p-3 rounded-lg">
-                <Layers className="h-8 w-8 text-purple-600 dark:text-purple-300" />
-              </div>
-            </div>
-          </div>
-          <div
-            className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow cursor-pointer"
-            onClick={handleCreateNode}
-          >
-            <div className="flex items-center justify-between text-white">
-              <div>
-                <p className="text-sm font-medium opacity-90">Create New</p>
-                <p className="text-2xl font-bold mt-2">Add Node</p>
-              </div>
-              <div className="bg-neutral-800 bg-opacity-20 p-3 rounded-lg">
-                <Plus className="h-8 w-8" />
-              </div>
-            </div>
-          </div>
-
-          <div
-            className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow cursor-pointer"
-            onClick={handleCreateCanvas}
-          >
-            <div className="flex items-center justify-between text-white">
-              <div>
-                <p className="text-sm font-medium opacity-90">Create New</p>
-                <p className="text-2xl font-bold mt-2">Canvas</p>
-              </div>
-              <div className="bg-neutral-800 bg-opacity-20 p-3 rounded-lg">
-                <Network className="h-8 w-8" />
-              </div>
-            </div>
-          </div>
+            );
+          })}
         </div>
 
         {/* Tabs */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 mb-6">
+        <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 mb-6">
           <div className="flex border-b border-gray-200 dark:border-gray-700">
             <button
               onClick={() => setActiveTab("my-nodes")}
@@ -421,7 +433,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Filters and Search */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6 border border-gray-200 dark:border-gray-700">
+        <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-lg p-6 mb-6 border border-gray-200 dark:border-gray-700">
           <div className="flex flex-col md:flex-row gap-4">
             {/* Search */}
             <div className="flex-1 relative">
@@ -435,7 +447,7 @@ export default function DashboardPage() {
                 }
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-neutral-700 dark:text-white"
               />
             </div>
 
@@ -448,7 +460,7 @@ export default function DashboardPage() {
                   onChange={(e) =>
                     setFilterLevel(e.target.value as NodeLevel | "all")
                   }
-                  className="pl-10 pr-8 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white appearance-none cursor-pointer"
+                  className="pl-10 pr-8 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-neutral-700 dark:text-white appearance-none cursor-pointer"
                 >
                   <option value="all">All Levels</option>
                   <option value="executive">Executive</option>
@@ -466,7 +478,7 @@ export default function DashboardPage() {
                 className={`p-2 rounded-lg transition-colors ${
                   viewMode === "grid"
                     ? "bg-blue-600 text-white"
-                    : "bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
+                    : "bg-neutral-200 dark:bg-neutral-700 text-gray-600 dark:text-gray-300"
                 }`}
               >
                 <Grid3x3 className="h-5 w-5" />
@@ -476,7 +488,7 @@ export default function DashboardPage() {
                 className={`p-2 rounded-lg transition-colors ${
                   viewMode === "list"
                     ? "bg-blue-600 text-white"
-                    : "bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
+                    : "bg-neutral-200 dark:bg-neutral-700 text-gray-600 dark:text-gray-300"
                 }`}
               >
                 <List className="h-5 w-5" />
@@ -488,7 +500,7 @@ export default function DashboardPage() {
         {/* Canvas Display */}
         {activeTab === "my-canvases" ? (
           filteredCanvases.length === 0 ? (
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-12 text-center border border-gray-200 dark:border-gray-700">
+            <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-lg p-12 text-center border border-gray-200 dark:border-gray-700">
               <Layers className="h-16 w-16 text-gray-400 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
                 No canvases found
@@ -513,7 +525,7 @@ export default function DashboardPage() {
               {filteredCanvases.map((canvas) => (
                 <div
                   key={canvas.canvasId}
-                  className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-all hover:-translate-y-1"
+                  className="bg-white dark:bg-neutral-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-all hover:-translate-y-1"
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div
@@ -572,17 +584,18 @@ export default function DashboardPage() {
                   </div>
 
                   <div className="flex gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <button
+                    <Button
+                      variant="primary"
                       onClick={(e) => {
                         e.stopPropagation();
                         router.push(`/canvas?id=${canvas.canvasId}`);
                       }}
-                      className="flex-1 inline-flex items-center justify-center px-3 py-2 bg-purple-50 dark:bg-purple-900 text-purple-600 dark:text-purple-300 rounded-lg hover:bg-purple-100 dark:hover:bg-purple-800 transition-colors text-sm font-medium"
+                      className="flex-1 inline-flex items-center justify-center px-3 py-2 bg-neutral-50 text-neutral-600 rounded-lg transition-colors text-sm font-medium"
                     >
                       <Eye className="h-4 w-4 mr-1" />
                       Open
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       onClick={(e) => {
                         e.stopPropagation();
                         const newName = prompt(
@@ -593,11 +606,11 @@ export default function DashboardPage() {
                           handleRenameCanvas(canvas.canvasId, newName);
                         }
                       }}
-                      className="flex-1 inline-flex items-center justify-center px-3 py-2 bg-blue-50 dark:bg-blue-900 text-blue-600 dark:text-blue-300 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-800 transition-colors text-sm font-medium"
+                      className="flex-1 inline-flex items-center justify-center px-3 py-2 bg-neutral-50 dark:bg-neutral-900 text-blue-600 dark:text-blue-300 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors text-sm font-medium"
                     >
                       <Edit className="h-4 w-4 mr-1" />
                       Rename
-                    </button>
+                    </Button>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -613,7 +626,7 @@ export default function DashboardPage() {
             </div>
           )
         ) : displayNodes.length === 0 ? (
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-12 text-center border border-gray-200 dark:border-gray-700">
+          <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-lg p-12 text-center border border-gray-200 dark:border-gray-700">
             <Users className="h-16 w-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
               No nodes found
@@ -638,7 +651,7 @@ export default function DashboardPage() {
             {displayNodes.map((node) => (
               <div
                 key={node.key}
-                className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-all hover:-translate-y-1"
+                className="bg-white dark:bg-neutral-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-all hover:-translate-y-1"
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
@@ -702,9 +715,9 @@ export default function DashboardPage() {
             ))}
           </div>
         ) : (
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
             <table className="w-full">
-              <thead className="bg-gray-50 dark:bg-gray-700">
+              <thead className="bg-neutral-50 dark:bg-neutral-700">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Name
@@ -727,7 +740,7 @@ export default function DashboardPage() {
                 {displayNodes.map((node) => (
                   <tr
                     key={node.key}
-                    className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    className="hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors"
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
