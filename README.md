@@ -9,6 +9,8 @@ A modern Next.js application for creating, visualizing, and managing complex dat
 ## Features
 
 - **Visual Tree Builder** - Drag and drop interface to create complex hierarchical structures
+- **Advanced Auto Layout** - Powered by Dagre algorithm with both horizontal and vertical layout options
+- **Multiple Layout Directions** - Switch between vertical (top-to-bottom) and horizontal (left-to-right) layouts
 <!--- ⚡ **Real-time Collaboration** - Work together with your team seamlessly-->
 <!--- **Team Management** - Organize teams, assign roles, and manage permissions-->
 <!--- **Version Control** - Track changes and maintain complete history-->
@@ -77,6 +79,17 @@ tree/
 └── public/              // assets
 ```
 
+## Layout Options
+
+For the layout options, we are using the Dagre algorithm, which offers two layout directions:
+
+### Vertical Layout (Top-to-Bottom)
+- **Direction**: TB (Top-to-Bottom)
+- **Usage**: Traditional organizational charts, reporting structures
+
+### Horizontal Layout (Left-to-Right)
+- **Direction**: LR (Left-to-Right)
+- **Best Usage**: Process flows, timeline visualizations, wide hierarchies
 
 ## 🤝 Contributing
 

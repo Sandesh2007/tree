@@ -19,7 +19,7 @@ export interface PersonData {
   phone?: string;
   image?: string;
   level: NodeLevel;
-  loc?: string; // GoJS location string "x y"
+  loc?: string; // Position string "x y" for diagram layout
 }
 
 export interface LinkData {

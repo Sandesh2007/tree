@@ -4,9 +4,11 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function Canvas() {
   const [isloading, setIsLoading] = useState(true);
+  const router = useRouter();
 
   const fetchUserData = async () => {
     try {
@@ -17,7 +19,9 @@ export default function Canvas() {
       }
     } catch (error: any) {
       if (error.response && error.response.status === 401) {
-        toast.error("Unauthorized access");
+        toast.error("Failed to fetch user data");
+        toast.error("Please login again");
+        router.push("/login");
       }
     } finally {
       setIsLoading(false);

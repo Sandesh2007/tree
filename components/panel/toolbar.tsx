@@ -9,9 +9,10 @@ import {
   Upload,
   Undo2,
   Redo2,
-  LayoutGrid,
   ZoomIn,
   Image,
+  ArrowDown,
+  ArrowRight,
 } from "lucide-react";
 import Button from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/themeToggle";
@@ -27,11 +28,12 @@ interface ToolbarProps {
   onImport: () => void;
   onUndo: () => void;
   onRedo: () => void;
-  onAutoLayout: () => void;
+  onAutoLayout: (direction: "TB" | "LR") => void;
   onZoomToFit: () => void;
   canUndo: boolean;
   canRedo: boolean;
   nodeCount: number;
+  layoutDirection?: "TB" | "LR";
 }
 
 export default function Toolbar({
@@ -50,6 +52,7 @@ export default function Toolbar({
   canUndo,
   canRedo,
   nodeCount,
+  layoutDirection = "TB",
 }: ToolbarProps) {
   return (
     <div className="flex items-center gap-2 bg-white/90 dark:bg-neutral-800/90 backdrop-blur-sm px-4 py-3 rounded-xl shadow-lg border border-neutral-200 dark:border-neutral-700">
@@ -111,15 +114,28 @@ export default function Toolbar({
 
       <div className="w-px h-6 bg-neutral-200 dark:bg-neutral-700" />
 
-      <Button
-        variant="ghost"
-        size="md"
-        onClick={onAutoLayout}
-        disabled={nodeCount === 0}
-        title="Auto Layout"
-      >
-        <LayoutGrid size={18} />
-      </Button>
+      <div className="flex items-center gap-1 bg-neutral-50 dark:bg-neutral-900 rounded-lg p-1">
+        <Button
+          variant={layoutDirection === "TB" ? "primary" : "ghost"}
+          size="md"
+          onClick={() => onAutoLayout("TB")}
+          disabled={nodeCount === 0}
+          title="Vertical Layout"
+          className="px-3"
+        >
+          <ArrowDown size={18} />
+        </Button>
+        <Button
+          variant={layoutDirection === "LR" ? "primary" : "ghost"}
+          size="md"
+          onClick={() => onAutoLayout("LR")}
+          disabled={nodeCount === 0}
+          title="Horizontal Layout"
+          className="px-3"
+        >
+          <ArrowRight size={18} />
+        </Button>
+      </div>
 
       <Button
         variant="ghost"

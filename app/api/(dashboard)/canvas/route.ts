@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
 
     const userWithoutPassword = {
       ...user.records[0].get("user"),
-      properties: (({ password, ...rest }) => rest)(
+      properties: (({ ...rest }) => rest)(
         user.records[0].get("user").properties,
       ),
     };
@@ -48,6 +48,7 @@ export async function POST(request: NextRequest) {
       { status: 200 },
     );
   } catch (error: any) {
+    console.error(error);
   } finally {
   }
 }

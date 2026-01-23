@@ -15,7 +15,7 @@ import EmptyState from "@/components/custom/tree-builder/emptyState";
 import ToastContainer from "@/components/custom/toast";
 import { useToast } from "@/app/hooks/useToast";
 import { useHistory } from "@/app/hooks/useHistory";
-import { DiagramRef } from "@/components/custom/tree-builder/diagramWrapper";
+import { DiagramRef } from "@/components/custom/tree-builder/reactFlowWrapper";
 
 import {
   PersonData,
@@ -62,9 +62,9 @@ interface ImportLinkData {
   };
 }
 
-// Dynamic import to avoid SSR issues with GoJS
+// Dynamic import to avoid SSR issues with React Flow
 const DiagramWrapper = dynamic(
-  () => import("@/components/custom/tree-builder/diagramWrapper"),
+  () => import("@/components/custom/tree-builder/reactFlowWrapper"),
   { ssr: false },
 );
 
@@ -83,6 +83,7 @@ export default function TreeBuilder() {
   const [nodes, setNodes] = useState<PersonData[]>([]);
   const [links, setLinks] = useState<LinkData[]>([]);
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
+  const [layoutDirection, setLayoutDirection] = useState<"TB" | "LR">("TB");
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -268,7 +269,7 @@ export default function TreeBuilder() {
     addToast("success", `${formData.name} added successfully`);
 
     // Apply layout after adding
-    setTimeout(() => diagramRef.current?.applyLayout(), 100);
+    setTimeout(() => diagramRef.current?.applyLayout(layoutDirection), 100);
   };
 
   // Edit person
@@ -366,10 +367,17 @@ export default function TreeBuilder() {
   };
 
   // Auto layout
-  const handleAutoLayout = useCallback(() => {
-    diagramRef.current?.applyLayout();
-    addToast("success", "Layout applied");
-  }, [addToast]);
+  const handleAutoLayout = useCallback(
+    (direction: "TB" | "LR") => {
+      setLayoutDirection(direction);
+      diagramRef.current?.applyLayout(direction);
+      addToast(
+        "success",
+        `${direction === "TB" ? "Vertical" : "Horizontal"} layout applied`,
+      );
+    },
+    [addToast],
+  );
 
   // Zoom to fit
   const handleZoomToFit = useCallback(() => {
@@ -422,9 +430,7 @@ export default function TreeBuilder() {
         try {
           const data = JSON.parse(event.target?.result as string);
 
-          // Handle both old format (nodes/edges) and new format (nodes/links)
           if (data.nodes) {
-            // Convert old format to new if necessary
             const newNodes: PersonData[] = data.nodes.map(
               (n: ImportNodeData) => ({
                 key: n.key || n.id,
@@ -453,9 +459,9 @@ export default function TreeBuilder() {
             saveState();
             addToast("success", `Imported ${newNodes.length} people`);
             setTimeout(() => {
-              diagramRef.current?.applyLayout();
+              diagramRef.current?.applyLayout("TB");
               diagramRef.current?.zoomToFit();
-            }, 100);
+            }, 500);
           } else {
             addToast("error", "Invalid file format");
           }
@@ -481,7 +487,7 @@ export default function TreeBuilder() {
         className="hidden"
       />
 
-      {/* GoJS Diagram */}
+      {/* React Flow Diagram */}
       {nodes.length > 0 ? (
         <DiagramWrapper
           ref={diagramRef}
@@ -513,6 +519,7 @@ export default function TreeBuilder() {
           canUndo={canUndo}
           canRedo={canRedo}
           nodeCount={nodes.length}
+          layoutDirection={layoutDirection}
         />
       </div>
 
