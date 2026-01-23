@@ -83,6 +83,7 @@ export async function POST(request: NextRequest) {
         `MATCH (user:User {email: $email})
          CREATE (canvas:Canvas {
            canvasId: $canvasId,
+           name: $name,
            data: $data,
            isPublic: $isPublic,
            createdAt: $createdAt,
@@ -93,6 +94,7 @@ export async function POST(request: NextRequest) {
         {
           email,
           canvasId,
+          name: `Canvas ${canvasId}`,
           data: dataString,
           isPublic: isPublic || false,
           createdAt: now,

@@ -33,6 +33,8 @@ const levelColors: Record<
   },
 };
 
+const DEFAULT_LEVEL = "member";
+
 const levelLabels: Record<string, string> = {
   executive: "Executive",
   manager: "Manager",
@@ -42,9 +44,11 @@ const levelLabels: Record<string, string> = {
 
 const PersonNode = ({ data, selected }: NodeProps) => {
   const personData = data as any;
-  const level = personData.level || "member";
+  const rawLevel = String(personData.level || "").toLowerCase();
+  const level = rawLevel in levelColors ? rawLevel : DEFAULT_LEVEL;
+
   const colors = levelColors[level];
-  const label = levelLabels[level];
+  const label = levelLabels[level] ?? "Member";
 
   const getInitials = (name: string) => {
     const parts = name.split(" ");

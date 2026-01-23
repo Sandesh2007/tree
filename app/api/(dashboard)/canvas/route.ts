@@ -62,6 +62,7 @@ export async function GET(request: NextRequest) {
     // Canvas exists - return the data
     const canvasData = {
       canvasId: canvas.properties.canvasId,
+      name: canvas.properties.name || `Canvas ${canvas.properties.canvasId}`,
       data: JSON.parse(canvas.properties.data || '{"nodes":[],"links":[]}'),
       isPublic: canvas.properties.isPublic || false,
       createdAt: canvas.properties.createdAt,

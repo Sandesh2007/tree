@@ -15,6 +15,7 @@ import EmptyState from "@/components/custom/tree-builder/emptyState";
 import ToastContainer from "@/components/custom/toast";
 import { useToast } from "@/app/hooks/useToast";
 import { useHistory } from "@/app/hooks/useHistory";
+import { useUserConfig } from "@/app/hooks/useUserConfig";
 import { DiagramRef } from "@/components/custom/tree-builder/reactFlowWrapper";
 
 import {
@@ -109,6 +110,11 @@ export default function TreeBuilder({
 
   const { toasts, addToast, removeToast } = useToast();
   const { pushState, undo, redo, canUndo, canRedo } = useHistory();
+  const {
+    customLevels,
+    customRelations,
+    refetch: refetchConfig,
+  } = useUserConfig();
 
   // Handle undo
   const handleUndo = useCallback(() => {
@@ -569,6 +575,8 @@ export default function TreeBuilder({
         setFormData={setFormData}
         onSubmit={handleAddPerson}
         nodes={nodes}
+        customLevels={customLevels}
+        customRelations={customRelations}
       />
 
       <EditPersonDialog
@@ -580,6 +588,7 @@ export default function TreeBuilder({
         formData={formData}
         setFormData={setFormData}
         onSubmit={handleEditPerson}
+        customLevels={customLevels}
       />
 
       <AddRelationDialog
@@ -595,6 +604,7 @@ export default function TreeBuilder({
         links={links}
         selectedNodeId={selectedNode}
         selectedNodeName={selectedNodeData?.name || ""}
+        customRelations={customRelations}
       />
 
       <ConfirmDialog

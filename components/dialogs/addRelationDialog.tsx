@@ -1,12 +1,20 @@
 "use client";
 
-import { useMemo } from "react";
-import { AlertCircle } from "lucide-react";
+import { useMemo, useState } from "react";
+import { AlertCircle, Plus, X } from "lucide-react";
 import Modal from "@/components/ui/modal";
 import FormSelect from "@/components/form/formSelect";
+import FormInput from "@/components/form/formInput";
 import Button from "@/components/ui/button";
-import { PersonFormData, PersonData, LinkData } from "@/types/types";
+import {
+  PersonFormData,
+  PersonData,
+  LinkData,
+  CustomRelation,
+} from "@/types/types";
 import { relationOptions, relationConfig } from "@/types/constants";
+import axios from "axios";
+import { toast } from "sonner";
 
 interface AddRelationDialogProps {
   isOpen: boolean;
@@ -18,6 +26,8 @@ interface AddRelationDialogProps {
   links: LinkData[];
   selectedNodeId: string | null;
   selectedNodeName: string;
+  errors?: Record<string, string>;
+  customRelations?: CustomRelation[];
 }
 
 export default function AddRelationDialog({
@@ -30,7 +40,46 @@ export default function AddRelationDialog({
   links,
   selectedNodeId,
   selectedNodeName,
+  errors = {},
+  customRelations = [],
 }: AddRelationDialogProps) {
+  const [showNewRelation, setShowNewRelation] = useState(false);
+  const [isSavingConfig, setIsSavingConfig] = useState(false);
+
+  const [newRelation, setNewRelation] = useState({
+    value: "",
+    label: "",
+    color: "#3b82f6",
+    dashed: false,
+  });
+
+  // Merge predefined and custom relation options
+  const allRelationOptions = useMemo(() => {
+    return [
+      ...relationOptions,
+      ...customRelations.map((relation) => ({
+        value: relation.value,
+        label: relation.label,
+      })),
+    ];
+  }, [customRelations]);
+
+  // Merge predefined and custom relation configs
+  const allRelationConfigs = useMemo(() => {
+    const configs: Record<
+      string,
+      { color: string; label: string; dashed: boolean }
+    > = { ...relationConfig };
+    customRelations.forEach((relation) => {
+      configs[relation.value] = {
+        color: relation.color,
+        label: relation.label,
+        dashed: relation.dashed,
+      };
+    });
+    return configs;
+  }, [customRelations]);
+
   // Find existing relations for the selected node
   const existingRelations = useMemo(() => {
     if (!selectedNodeId) return new Map<string, Set<string>>();
@@ -53,10 +102,10 @@ export default function AddRelationDialog({
 
   // Get available relation types for selected parent
   const availableRelationTypes = useMemo(() => {
-    if (!formData.parentId) return relationOptions;
+    if (!formData.parentId) return allRelationOptions;
     const usedRelations = existingRelations.get(formData.parentId) || new Set();
-    return relationOptions.filter((opt) => !usedRelations.has(opt.value));
-  }, [formData.parentId, existingRelations]);
+    return allRelationOptions.filter((opt) => !usedRelations.has(opt.value));
+  }, [formData.parentId, existingRelations, allRelationOptions]);
 
   // Check if all relations are used
   const allRelationsUsed =
@@ -68,7 +117,7 @@ export default function AddRelationDialog({
       .filter((n) => n.key !== selectedNodeId)
       .map((n) => {
         const usedCount = existingRelations.get(n.key)?.size || 0;
-        const allUsed = usedCount >= relationOptions.length;
+        const allUsed = usedCount >= allRelationOptions.length;
         return {
           value: n.key,
           label: allUsed
@@ -79,11 +128,11 @@ export default function AddRelationDialog({
           disabled: allUsed,
         };
       });
-  }, [nodes, selectedNodeId, existingRelations]);
+  }, [nodes, selectedNodeId, existingRelations, allRelationOptions]);
 
   const handleParentChange = (value: string) => {
     const usedRelations = existingRelations.get(value) || new Set();
-    const availableType = relationOptions.find(
+    const availableType = allRelationOptions.find(
       (opt) => !usedRelations.has(opt.value),
     );
     setFormData({
@@ -98,6 +147,46 @@ export default function AddRelationDialog({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!allRelationsUsed) onSubmit();
+  };
+
+  const handleCreateRelation = async () => {
+    if (!newRelation.value || !newRelation.label) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    setIsSavingConfig(true);
+    try {
+      const response = await axios.post("/api/config", {
+        type: "relation",
+        data: newRelation,
+      });
+
+      if (response.data.success) {
+        toast.success("Custom relation created successfully");
+        setFormData({ ...formData, relationType: newRelation.value as any });
+        setShowNewRelation(false);
+        setNewRelation({
+          value: "",
+          label: "",
+          color: "#3b82f6",
+          dashed: false,
+        });
+        // Trigger parent to refetch configs
+        window.location.reload();
+      }
+    } catch (error) {
+      toast.error("Failed to create custom relation");
+    } finally {
+      setIsSavingConfig(false);
+    }
+  };
+
+  // Get current relation config
+  const currentRelationConfig = allRelationConfigs[formData.relationType] || {
+    color: "#6366f1",
+    label: formData.relationType,
+    dashed: false,
   };
 
   return (
@@ -129,18 +218,105 @@ export default function AddRelationDialog({
               </div>
             ) : (
               <>
-                <FormSelect
-                  label="Relationship Type"
-                  value={formData.relationType}
-                  onChange={(value) =>
-                    setFormData({
-                      ...formData,
-                      relationType: value as PersonFormData["relationType"],
-                    })
-                  }
-                  options={availableRelationTypes}
-                  required
-                />
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Relationship Type <span className="text-red-500">*</span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setShowNewRelation(!showNewRelation)}
+                      className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                    >
+                      {showNewRelation ? (
+                        <>
+                          <X className="h-3 w-3" />
+                          Cancel
+                        </>
+                      ) : (
+                        <>
+                          <Plus className="h-3 w-3" />
+                          New Relation
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  {showNewRelation ? (
+                    <div className="space-y-3 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                      <FormInput
+                        label="Value (ID)"
+                        value={newRelation.value}
+                        onChange={(value) =>
+                          setNewRelation({
+                            ...newRelation,
+                            value: value.toLowerCase().replace(/\s+/g, "_"),
+                          })
+                        }
+                        placeholder="e.g., supervises"
+                        required
+                      />
+                      <FormInput
+                        label="Label"
+                        value={newRelation.label}
+                        onChange={(value) =>
+                          setNewRelation({ ...newRelation, label: value })
+                        }
+                        placeholder="e.g., Supervises"
+                        required
+                      />
+                      <FormInput
+                        label="Line Color"
+                        type="color"
+                        value={newRelation.color}
+                        onChange={(value) =>
+                          setNewRelation({ ...newRelation, color: value })
+                        }
+                      />
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={newRelation.dashed}
+                          onChange={(e) =>
+                            setNewRelation({
+                              ...newRelation,
+                              dashed: e.target.checked,
+                            })
+                          }
+                          className="w-4 h-4 text-blue-600 rounded"
+                        />
+                        <span className="text-sm text-gray-700 dark:text-gray-300">
+                          Dashed line
+                        </span>
+                      </label>
+                      <Button
+                        type="button"
+                        onClick={handleCreateRelation}
+                        disabled={
+                          isSavingConfig ||
+                          !newRelation.value ||
+                          !newRelation.label
+                        }
+                        className="w-full"
+                      >
+                        {isSavingConfig ? "Creating..." : "Create Relation"}
+                      </Button>
+                    </div>
+                  ) : (
+                    <FormSelect
+                      label=""
+                      value={formData.relationType}
+                      onChange={(value) =>
+                        setFormData({
+                          ...formData,
+                          relationType: value as PersonFormData["relationType"],
+                        })
+                      }
+                      options={availableRelationTypes}
+                      required
+                    />
+                  )}
+                </div>
                 <div className="p-3 rounded-lg bg-neutral-50 border border-neutral-200">
                   <p className="text-sm text-neutral-600">
                     <span className="font-medium">
@@ -149,11 +325,11 @@ export default function AddRelationDialog({
                     <span
                       className="mx-2 px-2 py-0.5 rounded text-xs font-medium"
                       style={{
-                        backgroundColor: `${relationConfig[formData.relationType].color}20`,
-                        color: relationConfig[formData.relationType].color,
+                        backgroundColor: `${currentRelationConfig.color}20`,
+                        color: currentRelationConfig.color,
                       }}
                     >
-                      {relationConfig[formData.relationType].label}
+                      {currentRelationConfig.label}
                     </span>
                     <span className="font-medium">{selectedNodeName}</span>
                   </p>

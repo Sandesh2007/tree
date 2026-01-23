@@ -15,14 +15,30 @@ import {
   Filter,
   Grid3x3,
   List,
+  Layers,
+  Calendar,
+  Globe,
+  Lock,
+  Settings,
 } from "lucide-react";
 import { PersonData, NodeLevel } from "@/types/types";
 import NodeModal, { type NodeFormData } from "@/components/dialogs/node-modal";
+import ConfigModal from "@/components/dialogs/config-modal";
 import { generateCanvasId } from "@/lib/utils";
 
 interface NodeWithConnections extends PersonData {
   connections?: number;
   createdAt?: string;
+}
+
+interface CanvasData {
+  canvasId: string;
+  name?: string;
+  nodeCount: number;
+  linkCount: number;
+  isPublic: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export default function DashboardPage() {
@@ -31,25 +47,35 @@ export default function DashboardPage() {
   const [connectedNodes, setConnectedNodes] = useState<NodeWithConnections[]>(
     [],
   );
+  const [canvases, setCanvases] = useState<CanvasData[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterLevel, setFilterLevel] = useState<NodeLevel | "all">("all");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [activeTab, setActiveTab] = useState<"my-nodes" | "connections">(
-    "my-nodes",
-  );
+  const [activeTab, setActiveTab] = useState<
+    "my-nodes" | "connections" | "my-canvases"
+  >("my-nodes");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingNode, setEditingNode] = useState<NodeFormData | undefined>(
     undefined,
   );
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
+  const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
   const router = useRouter();
 
   const fetchDashboardData = async () => {
     try {
-      const response = await axios.get("/api/dashboard");
-      if (response.data.success) {
-        setNodes(response.data.data.userNodes || []);
-        setConnectedNodes(response.data.data.connectedNodes || []);
+      const [dashboardResponse, canvasesResponse] = await Promise.all([
+        axios.get("/api/dashboard"),
+        axios.get("/api/canvases"),
+      ]);
+
+      if (dashboardResponse.data.success) {
+        setNodes(dashboardResponse.data.data.userNodes || []);
+        setConnectedNodes(dashboardResponse.data.data.connectedNodes || []);
+      }
+
+      if (canvasesResponse.data.success) {
+        setCanvases(canvasesResponse.data.canvases || []);
       }
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 401) {
@@ -77,6 +103,48 @@ export default function DashboardPage() {
   const handleCreateCanvas = () => {
     const canvasId = generateCanvasId();
     router.push(`/canvas?id=${canvasId}`);
+  };
+
+  const handleRenameCanvas = async (canvasId: string, newName: string) => {
+    if (!newName.trim()) {
+      toast.error("Canvas name cannot be empty");
+      return;
+    }
+
+    try {
+      const response = await axios.put("/api/canvases", {
+        canvasId,
+        name: newName.trim(),
+      });
+
+      if (response.data.success) {
+        toast.success("Canvas renamed successfully");
+        fetchDashboardData();
+      }
+    } catch (error) {
+      toast.error("Failed to rename canvas");
+    }
+  };
+
+  const handleDeleteCanvas = async (canvasId: string) => {
+    if (
+      !confirm(
+        "Are you sure you want to delete this canvas? This action cannot be undone.",
+      )
+    ) {
+      return;
+    }
+
+    try {
+      const response = await axios.delete(`/api/canvases?canvasId=${canvasId}`);
+
+      if (response.data.success) {
+        toast.success("Canvas deleted successfully");
+        fetchDashboardData();
+      }
+    } catch (error) {
+      toast.error("Failed to delete canvas");
+    }
   };
 
   const handleEditNode = (nodeKey: string) => {
@@ -147,8 +215,7 @@ export default function DashboardPage() {
   const filteredNodes = nodes.filter((node) => {
     const matchesSearch =
       node.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      node.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      node.department?.toLowerCase().includes(searchQuery.toLowerCase());
+      node.role.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesFilter = filterLevel === "all" || node.level === filterLevel;
     return matchesSearch && matchesFilter;
   });
@@ -157,6 +224,13 @@ export default function DashboardPage() {
     const matchesSearch =
       node.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       node.role.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesSearch;
+  });
+
+  const filteredCanvases = canvases.filter((canvas) => {
+    const matchesSearch = canvas.canvasId
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
     return matchesSearch;
   });
 
@@ -199,23 +273,36 @@ export default function DashboardPage() {
   }
 
   const displayNodes =
-    activeTab === "my-nodes" ? filteredNodes : filteredConnections;
+    activeTab === "my-nodes"
+      ? filteredNodes
+      : activeTab === "connections"
+        ? filteredConnections
+        : [];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
-            Dashboard
-          </h1>
-          <p className="text-gray-600 dark:text-gray-300">
-            Manage your organization tree and connections
-          </p>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
+              Dashboard
+            </h1>
+            <p className="text-gray-600 dark:text-gray-300">
+              Manage your organization tree and connections
+            </p>
+          </div>
+          <button
+            onClick={() => setIsConfigModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl"
+          >
+            <Settings className="h-5 w-5" />
+            <span className="font-medium">Settings</span>
+          </button>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-shadow">
             <div className="flex items-center justify-between">
               <div>
@@ -248,6 +335,21 @@ export default function DashboardPage() {
             </div>
           </div>
 
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-shadow">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                  My Canvases
+                </p>
+                <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
+                  {canvases.length}
+                </p>
+              </div>
+              <div className="bg-purple-100 dark:bg-purple-900 p-3 rounded-lg">
+                <Layers className="h-8 w-8 text-purple-600 dark:text-purple-300" />
+              </div>
+            </div>
+          </div>
           <div
             className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow cursor-pointer"
             onClick={handleCreateNode}
@@ -304,6 +406,17 @@ export default function DashboardPage() {
               <Network className="inline-block w-4 h-4 mr-2" />
               Connected Nodes ({connectedNodes.length})
             </button>
+            <button
+              onClick={() => setActiveTab("my-canvases")}
+              className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
+                activeTab === "my-canvases"
+                  ? "text-blue-600 border-b-2 border-blue-600"
+                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+              }`}
+            >
+              <Layers className="inline-block w-4 h-4 mr-2" />
+              My Canvases ({canvases.length})
+            </button>
           </div>
         </div>
 
@@ -315,7 +428,11 @@ export default function DashboardPage() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search nodes..."
+                placeholder={
+                  activeTab === "my-canvases"
+                    ? "Search canvases..."
+                    : "Search nodes..."
+                }
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
@@ -368,8 +485,134 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Nodes Display */}
-        {displayNodes.length === 0 ? (
+        {/* Canvas Display */}
+        {activeTab === "my-canvases" ? (
+          filteredCanvases.length === 0 ? (
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-12 text-center border border-gray-200 dark:border-gray-700">
+              <Layers className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                No canvases found
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
+                {searchQuery
+                  ? "Try adjusting your search"
+                  : "Get started by creating your first canvas"}
+              </p>
+              {!searchQuery && (
+                <button
+                  onClick={handleCreateCanvas}
+                  className="inline-flex items-center px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                >
+                  <Plus className="h-5 w-5 mr-2" />
+                  Create Canvas
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredCanvases.map((canvas) => (
+                <div
+                  key={canvas.canvasId}
+                  className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-all hover:-translate-y-1"
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div
+                      className="flex-1 cursor-pointer"
+                      onClick={() =>
+                        router.push(`/canvas?id=${canvas.canvasId}`)
+                      }
+                    >
+                      <div className="flex items-center gap-2 mb-2">
+                        <Layers className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                          {canvas.name || `Canvas ${canvas.canvasId}`}
+                        </h3>
+                      </div>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 font-mono">
+                        ID: {canvas.canvasId}
+                      </p>
+                    </div>
+                    {canvas.isPublic ? (
+                      <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800 border border-green-200 flex items-center gap-1">
+                        <Globe className="h-3 w-3" />
+                        Public
+                      </span>
+                    ) : (
+                      <span className="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800 border border-gray-200 flex items-center gap-1">
+                        <Lock className="h-3 w-3" />
+                        Private
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="space-y-2 mb-4">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Nodes:
+                      </span>
+                      <span className="font-medium text-gray-900 dark:text-white">
+                        {canvas.nodeCount}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Links:
+                      </span>
+                      <span className="font-medium text-gray-900 dark:text-white">
+                        {canvas.linkCount}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 pt-2 border-t border-gray-200 dark:border-gray-700">
+                      <Calendar className="h-4 w-4" />
+                      <span>
+                        Updated{" "}
+                        {new Date(canvas.updatedAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        router.push(`/canvas?id=${canvas.canvasId}`);
+                      }}
+                      className="flex-1 inline-flex items-center justify-center px-3 py-2 bg-purple-50 dark:bg-purple-900 text-purple-600 dark:text-purple-300 rounded-lg hover:bg-purple-100 dark:hover:bg-purple-800 transition-colors text-sm font-medium"
+                    >
+                      <Eye className="h-4 w-4 mr-1" />
+                      Open
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const newName = prompt(
+                          "Enter new canvas name:",
+                          canvas.name || `Canvas ${canvas.canvasId}`,
+                        );
+                        if (newName !== null) {
+                          handleRenameCanvas(canvas.canvasId, newName);
+                        }
+                      }}
+                      className="flex-1 inline-flex items-center justify-center px-3 py-2 bg-blue-50 dark:bg-blue-900 text-blue-600 dark:text-blue-300 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-800 transition-colors text-sm font-medium"
+                    >
+                      <Edit className="h-4 w-4 mr-1" />
+                      Rename
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteCanvas(canvas.canvasId);
+                      }}
+                      className="px-3 py-2 bg-red-50 dark:bg-red-900 text-red-600 dark:text-red-300 rounded-lg hover:bg-red-100 dark:hover:bg-red-800 transition-colors"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
+        ) : displayNodes.length === 0 ? (
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-12 text-center border border-gray-200 dark:border-gray-700">
             <Users className="h-16 w-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
@@ -472,10 +715,7 @@ export default function DashboardPage() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Level
                   </th>
-                  <th
-                    className="px-6 py-3 text-left
- text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-                  >
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Connections
                   </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
@@ -547,13 +787,22 @@ export default function DashboardPage() {
         )}
       </div>
 
-      {/* Node Modal */}
       <NodeModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSave={handleSaveNode}
         nodeData={editingNode}
         mode={modalMode}
+      />
+
+      {/* Config Modal */}
+      <ConfigModal
+        isOpen={isConfigModalOpen}
+        onClose={() => setIsConfigModalOpen(false)}
+        onUpdate={() => {
+          // Refresh dashboard data if needed
+          fetchDashboardData();
+        }}
       />
     </div>
   );

@@ -1,10 +1,11 @@
-export type NodeLevel = "executive" | "manager" | "lead" | "member";
+export type NodeLevel = "executive" | "manager" | "lead" | "member" | string;
 
 export type RelationType =
   | "reports_to"
   | "manages"
   | "collaborates"
-  | "mentors";
+  | "mentors"
+  | string;
 
 /**
  * Represents the relation type in the tree
@@ -47,4 +48,39 @@ export interface PersonFormData {
 export interface DiagramData {
   nodes: PersonData[];
   links: LinkData[];
+}
+
+/**
+ * Custom level type configuration
+ */
+export interface CustomLevel {
+  id: string;
+  value: string;
+  label: string;
+  color: string;
+  bgColor: string;
+  borderColor: string;
+  createdBy: string;
+  createdAt: string;
+}
+
+/**
+ * Custom relation type configuration
+ */
+export interface CustomRelation {
+  id: string;
+  value: string;
+  label: string;
+  color: string;
+  dashed: boolean;
+  createdBy: string;
+  createdAt: string;
+}
+
+/**
+ * User configuration for custom levels and relations
+ */
+export interface UserConfig {
+  customLevels: CustomLevel[];
+  customRelations: CustomRelation[];
 }
