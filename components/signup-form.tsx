@@ -95,7 +95,7 @@ export function SignupForm({
                     onChange={(e) => setName(e.target.value)}
                     placeholder="John Doe"
                     required
-                    className="w-full h-14 bg-white dark:bg-white/5 border border-neutral-300 dark:border-white/10 rounded-xl text-base text-neutral-900 dark:text-white placeholder-neutral-400 dark:placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                    className="w-full h-12 bg-white dark:bg-white/5 border border-neutral-300 dark:border-white/10 rounded-xl text-base text-neutral-900 dark:text-white placeholder-neutral-400 dark:placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
                   />
                 </Field>
 
@@ -109,7 +109,7 @@ export function SignupForm({
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="m@example.com"
                     required
-                    className="w-full h-14 bg-white dark:bg-white/5 border border-neutral-300 dark:border-white/10 rounded-xl text-base text-neutral-900 dark:text-white placeholder-neutral-400 dark:placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                    className="w-full h-12 bg-white dark:bg-white/5 border border-neutral-300 dark:border-white/10 rounded-xl text-base text-neutral-900 dark:text-white placeholder-neutral-400 dark:placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
                   />
                 </Field>
 
@@ -123,7 +123,7 @@ export function SignupForm({
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
                     required
-                    className="w-full h-14 bg-white dark:bg-white/5 border border-neutral-300 dark:border-white/10 rounded-xl text-base text-neutral-900 dark:text-white placeholder-neutral-400 dark:placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                    className="w-full h-12 bg-white dark:bg-white/5 border border-neutral-300 dark:border-white/10 rounded-xl text-base text-neutral-900 dark:text-white placeholder-neutral-400 dark:placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
                   />
                   <FieldDescription className="text-xs text-neutral-500 dark:text-gray-500">
                     Minimum 8 characters
@@ -140,7 +140,7 @@ export function SignupForm({
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="••••••••"
                     required
-                    className="w-full h-14 bg-white dark:bg-white/5 border border-neutral-300 dark:border-white/10 rounded-xl text-base text-neutral-900 dark:text-white placeholder-neutral-400 dark:placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                    className="w-full h-12 bg-white dark:bg-white/5 border border-neutral-300 dark:border-white/10 rounded-xl text-base text-neutral-900 dark:text-white placeholder-neutral-400 dark:placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
                   />
                 </Field>
 
@@ -148,7 +148,7 @@ export function SignupForm({
                   <Button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full p-4 bg-linear-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-base font-semibold rounded-xl shadow-lg shadow-blue-500/25 transition-all flex items-center justify-center gap-2"
+                    className="w-full p-3 bg-linear-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-base font-semibold rounded-xl shadow-lg shadow-blue-500/25 transition-all flex items-center justify-center gap-2"
                   >
                     {isSubmitting ? (
                       <>
@@ -164,8 +164,8 @@ export function SignupForm({
                   </Button>
                 </Field>
 
-                <FieldSeparator className="my-6">
-                  <span className="px-4 text-neutral-600 dark:text-gray-400 text-sm">
+                <FieldSeparator className="my-4">
+                  <span className="px-3 text-neutral-600 dark:text-gray-400 text-sm">
                     Or continue with
                   </span>
                 </FieldSeparator>
@@ -204,7 +204,7 @@ export function SignupForm({
             </form>
           </div>
 
-          <div className="px-6 py-6 text-center">
+          <div className="p-4 text-center">
             <FieldDescription className="text-xs text-neutral-500 dark:text-gray-500">
               By clicking continue, you agree to our{" "}
               <a className="hover:text-neutral-900 dark:hover:text-white transition-colors">

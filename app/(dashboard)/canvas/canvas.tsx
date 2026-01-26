@@ -1,78 +1,107 @@
 "use client";
+
 import TreeBuilder from "@/components/custom/treeBuilder";
 import { useEffect, useState, useCallback, useRef } from "react";
 import axios from "axios";
 import { toast } from "sonner";
-import { Loader2, Lock, Globe, Save, Trash2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { DiagramData } from "@/types/types";
-import Button from "@/components/ui/button";
 
 export default function Canvas() {
   const [isLoading, setIsLoading] = useState(true);
   const [canvasId, setCanvasId] = useState<string | null>(null);
   const [canvasName, setCanvasName] = useState<string>("");
-  const [isEditingName, setIsEditingName] = useState(false);
   const [canvasData, setCanvasData] = useState<DiagramData | null>(null);
   const [isPublic, setIsPublic] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isNewCanvas, setIsNewCanvas] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const initialLoadRef = useRef(true);
 
-  // Fetch or initialize canvas
-  const fetchCanvasData = async (id: string) => {
-    try {
-      const response = await axios.get(`/api/canvas?id=${id}`);
+  // Fetch existing canvas or create new one
+  const fetchOrCreateCanvas = useCallback(
+    async (id: string) => {
+      try {
+        // Try to fetch the canvas
+        const response = await axios.get(`/api/canvas?id=${id}`);
 
-      if (response.data.success) {
-        if (response.data.canvas) {
-          // Existing canvas
-          setCanvasData(response.data.canvas.data);
-          setIsPublic(response.data.canvas.isPublic);
-          setCanvasName(response.data.canvas.name || `Canvas ${id}`);
-          setLastSaved(new Date(response.data.canvas.updatedAt));
-        } else {
-          // New canvas
-          setCanvasData({ nodes: [], links: [] });
-          setCanvasName(`Canvas ${id}`);
-        }
-      }
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        if (error.response?.status === 401) {
-          toast.error("Please login again");
-          router.push("/login");
-        } else if (error.response?.status === 404) {
-          // Canvas doesn't exist, create new one
-          setCanvasData({ nodes: [], links: [] });
-        } else {
-          toast.error("Failed to fetch canvas data");
-        }
-      } else {
-        toast.error("Failed to fetch canvas data");
-      }
-    } finally {
-      setIsLoading(false);
-      // Mark initial load as complete after a short delay
-      setTimeout(() => {
-        initialLoadRef.current = false;
-      }, 500);
-    }
-  };
+        if (response.data.success) {
+          if (response.data.canvas) {
+            // Canvas exists in database - load it
+            const canvas = response.data.canvas;
+            setCanvasData(canvas.data || { nodes: [], links: [] });
+            setIsPublic(canvas.isPublic || false);
+            setCanvasName(canvas.name || `Untitled Canvas`);
+            setLastSaved(canvas.updatedAt ? new Date(canvas.updatedAt) : null);
+            setHasUnsavedChanges(false);
+            setIsNewCanvas(false);
+          } else {
+            // Canvas doesn't exist - create new one
+            const emptyData: DiagramData = { nodes: [], links: [] };
+            const defaultName = `Untitled Canvas`;
 
-  // Save canvas data
+            // Create canvas in database
+            const createResponse = await axios.post("/api/canvas/save", {
+              canvasId: id,
+              name: defaultName,
+              data: emptyData,
+              isPublic: false,
+            });
+
+            if (createResponse.data.success) {
+              setCanvasData(emptyData);
+              setCanvasName(defaultName);
+              setIsPublic(false);
+              setLastSaved(new Date());
+              setHasUnsavedChanges(false);
+              setIsNewCanvas(true);
+              toast.success("New canvas created");
+            } else {
+              throw new Error("Failed to create canvas");
+            }
+          }
+        } else {
+          throw new Error(response.data.message || "Failed to load canvas");
+        }
+      } catch (error: unknown) {
+        console.error("Canvas fetch/create error:", error);
+
+        if (axios.isAxiosError(error)) {
+          if (error.response?.status === 401) {
+            toast.error("Please login again");
+            router.push("/login");
+            return;
+          }
+        }
+
+        toast.error("Failed to load canvas");
+        router.push("/dashboard");
+      } finally {
+        setIsLoading(false);
+        setTimeout(() => {
+          initialLoadRef.current = false;
+        }, 500);
+      }
+    },
+    [router],
+  );
+
+  // Save canvas
   const saveCanvas = useCallback(
     async (data: DiagramData, force = false) => {
-      if (!canvasId || (!hasUnsavedChanges && !force)) return;
+      if (!canvasId) return;
+      if (!hasUnsavedChanges && !force && !isNewCanvas) return;
 
       try {
         setIsSaving(true);
         const response = await axios.post("/api/canvas/save", {
           canvasId,
+          name: canvasName,
           data,
           isPublic,
         });
@@ -80,9 +109,12 @@ export default function Canvas() {
         if (response.data.success) {
           setLastSaved(new Date());
           setHasUnsavedChanges(false);
+          setIsNewCanvas(false);
           if (force) {
             toast.success("Canvas saved successfully");
           }
+        } else {
+          throw new Error(response.data.message || "Failed to save");
         }
       } catch (error: unknown) {
         console.error("Failed to save canvas:", error);
@@ -91,13 +123,12 @@ export default function Canvas() {
         setIsSaving(false);
       }
     },
-    [canvasId, isPublic, hasUnsavedChanges],
+    [canvasId, canvasName, isPublic, hasUnsavedChanges, isNewCanvas],
   );
 
-  // Manual save function
+  // Manual save
   const handleManualSave = useCallback(() => {
     if (canvasData && canvasId) {
-      // Clear any pending auto-save
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
       }
@@ -119,8 +150,11 @@ export default function Canvas() {
       if (response.data.success) {
         setIsPublic(newVisibility);
         toast.success(`Canvas is now ${newVisibility ? "public" : "private"}`);
+      } else {
+        throw new Error(response.data.message || "Failed to update visibility");
       }
-    } catch {
+    } catch (error) {
+      console.error("Visibility toggle error:", error);
       toast.error("Failed to update visibility");
     }
   };
@@ -130,17 +164,22 @@ export default function Canvas() {
     if (!canvasId || !newName.trim()) return;
 
     try {
-      const response = await axios.put("/api/canvases", {
+      // Update name via save endpoint (includes name in the update)
+      const response = await axios.post("/api/canvas/save", {
         canvasId,
         name: newName.trim(),
+        data: canvasData,
+        isPublic,
       });
 
       if (response.data.success) {
         setCanvasName(newName.trim());
-        setIsEditingName(false);
         toast.success("Canvas renamed successfully");
+      } else {
+        throw new Error(response.data.message || "Failed to rename");
       }
-    } catch {
+    } catch (error) {
+      console.error("Rename error:", error);
       toast.error("Failed to rename canvas");
     }
   };
@@ -163,191 +202,114 @@ export default function Canvas() {
       if (response.data.success) {
         toast.success("Canvas deleted successfully");
         router.push("/dashboard");
+      } else {
+        throw new Error(response.data.message || "Failed to delete");
       }
-    } catch {
+    } catch (error) {
+      console.error("Delete error:", error);
       toast.error("Failed to delete canvas");
     }
   };
 
-  // Initialize canvas
+  // Initialize canvas on mount
   useEffect(() => {
     const id = searchParams.get("id");
 
     if (id) {
       setCanvasId(id);
-      fetchCanvasData(id);
+      fetchOrCreateCanvas(id);
     } else {
       toast.error("No canvas ID provided");
       router.push("/dashboard");
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams, router]);
+  }, [searchParams, router, fetchOrCreateCanvas]);
 
-  // Debounced auto-save when data changes (only after initial load)
+  // Track unsaved changes
   useEffect(() => {
     if (!canvasData || !canvasId || initialLoadRef.current) return;
 
-    // Clear existing timeout
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
     }
 
-    // Mark that we have unsaved changes
     setHasUnsavedChanges(true);
 
-    // Set new timeout to save after 1 second of inactivity
+    // Optional: Auto-save after 30 seconds of inactivity
     // saveTimeoutRef.current = setTimeout(() => {
     //   saveCanvas(canvasData);
-    // }, 1000);
+    // }, 30000);
 
-    // Cleanup timeout on unmount or when dependencies change
     return () => {
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
       }
     };
-  }, [canvasData, canvasId, saveCanvas]);
+  }, [canvasData, canvasId]);
 
   // Handle data changes from TreeBuilder
   const handleDataChange = useCallback((data: DiagramData) => {
     setCanvasData(data);
   }, []);
 
+  // Warn before leaving with unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue =
+          "You have unsaved changes. Are you sure you want to leave?";
+        return e.returnValue;
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [hasUnsavedChanges]);
+
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="animate-spin h-12 w-12 text-blue-600" />
+      <div className="flex items-center justify-center min-h-screen bg-neutral-50 dark:bg-neutral-900">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="animate-spin h-12 w-12 text-blue-600" />
+          <p className="text-neutral-600 dark:text-neutral-400">
+            Loading canvas...
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
-      {/* Header with controls */}
-      <div className="bg-neutral-50 dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700 px-6 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          {isEditingName ? (
-            <input
-              type="text"
-              value={canvasName}
-              onChange={(e) => setCanvasName(e.target.value)}
-              onBlur={() => handleRenameCanvas(canvasName)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  handleRenameCanvas(canvasName);
-                } else if (e.key === "Escape") {
-                  setIsEditingName(false);
+    <>
+      {canvasData && canvasId && (
+        <TreeBuilder
+          initialData={canvasData}
+          onDataChange={handleDataChange}
+          canvas={{
+            id: canvasId,
+            name: canvasName,
+            isPublic,
+            isSaving,
+            hasUnsavedChanges,
+            lastSaved,
+            onSave: handleManualSave,
+            onRename: handleRenameCanvas,
+            onToggleVisibility: toggleVisibility,
+            onDelete: handleDeleteCanvas,
+            onBack: () => {
+              if (hasUnsavedChanges) {
+                if (confirm("You have unsaved changes. Save before leaving?")) {
+                  saveCanvas(canvasData, true).then(() => {
+                    router.push("/dashboard");
+                  });
+                  return;
                 }
-              }}
-              autoFocus
-              className="text-xl font-semibold text-neutral-900 dark:text-white bg-transparent border-b-2 border-blue-500 focus:outline-none"
-            />
-          ) : (
-            <h1
-              className="text-xl font-semibold text-neutral-900 dark:text-white cursor-pointer hover:text-neutral-600 dark:hover:text-neutral-400 transition-colors"
-              onClick={() => setIsEditingName(true)}
-              title="Click to rename"
-            >
-              {canvasName}
-            </h1>
-          )}
-          <span className="text-sm text-gray-500 dark:text-gray-400">
-            {canvasId}
-          </span>
-        </div>
-
-        <div className="flex items-center gap-4">
-          {/* Last saved indicator */}
-          <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-            {isSaving ? (
-              <>
-                <Save className="h-4 w-4 animate-pulse" />
-                <span>Saving...</span>
-              </>
-            ) : // : hasUnsavedChanges ? (
-            // <>
-            //   <Save className="h-4 w-4 text-yellow-500" />
-            //   <span>Unsaved changes</span>
-            // </>
-            // )
-            lastSaved ? (
-              <>
-                <Save className="h-4 w-4 text-green-500" />
-                <span>
-                  Saved{" "}
-                  {new Date().getTime() - lastSaved.getTime() < 60000
-                    ? "just now"
-                    : lastSaved.toLocaleTimeString()}
-                </span>
-              </>
-            ) : null}
-          </div>
-
-          {/* Manual save button */}
-          <Button
-            variant="primary"
-            onClick={handleManualSave}
-            disabled={isSaving || (!hasUnsavedChanges && lastSaved !== null)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-              isSaving || (!hasUnsavedChanges && lastSaved !== null)
-                ? " text-neutral-400 cursor-not-allowed dark:bg-neutral-700 dark:text-neutral-500"
-                : " text-neutral-50 dark:text-neutral-950"
-            }`}
-          >
-            <Save className="h-4 w-4" />
-            <span>Save</span>
-          </Button>
-
-          <Button
-            variant="primary"
-            onClick={toggleVisibility}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-              isPublic
-                ? "bg-green-500 hover:bg-green-600 dark:bg-green-500 dark:hover:bg-green-600 text-white dark:text-white"
-                : "bg-neutral-500 hover:bg-neutral-600 dark:bg-neutral-500 dark:hover:bg-neutral-600 text-white dark:text-white"
-            }`}
-          >
-            {isPublic ? (
-              <>
-                <Globe className="h-4 w-4" />
-                <span>Public</span>
-              </>
-            ) : (
-              <>
-                <Lock className="h-4 w-4" />
-                <span>Private</span>
-              </>
-            )}
-          </Button>
-
-          <Button
-            variant="destructive"
-            onClick={handleDeleteCanvas}
-            className="px-4 py-2 text-sm font-medium"
-          >
-            <Trash2 className="h-4 w-4" />
-            Delete Canvas
-          </Button>
-
-          <Button
-            variant="secondary"
-            onClick={() => router.push("/dashboard")}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600"
-          >
-            Back to Dashboard
-          </Button>
-        </div>
-      </div>
-
-      {/* Tree Builder */}
-      <div className="flex-1">
-        {canvasData && (
-          <TreeBuilder
-            initialData={canvasData}
-            onDataChange={handleDataChange}
-          />
-        )}
-      </div>
-    </div>
+              }
+              router.push("/dashboard");
+            },
+          }}
+        />
+      )}
+    </>
   );
 }

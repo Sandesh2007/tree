@@ -69,6 +69,7 @@ export interface CustomLevel {
  */
 export interface CustomRelation {
   id: string;
+  key: string;
   value: string;
   label: string;
   color: string;
