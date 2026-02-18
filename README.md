@@ -9,7 +9,7 @@ A modern Next.js application for creating, visualizing, and managing complex dat
 ## Features
 
 - **Visual Tree Builder** - Drag and drop interface to create complex hierarchical structures
-- **Advanced Auto Layout** - Powered by Dagre algorithm with both horizontal and vertical layout options
+- **Advanced Auto Layout** - Powered by ELK (elkjs) algorithm with both horizontal and vertical layout options
 - **Multiple Layout Directions** - Switch between vertical (top-to-bottom) and horizontal (left-to-right) layouts
 <!--- ⚡ **Real-time Collaboration** - Work together with your team seamlessly-->
 <!--- **Team Management** - Organize teams, assign roles, and manage permissions-->
@@ -81,7 +81,7 @@ tree/
 
 ## Layout Options
 
-For the layout options, we are using the Dagre algorithm, which offers two layout directions:
+For the layout options, we are using the ELK algorithm, which offers two layout directions:
 
 ### Vertical Layout (Top-to-Bottom)
 - **Direction**: TB (Top-to-Bottom)

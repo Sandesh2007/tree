@@ -1,5 +1,14 @@
 import { Node, Edge } from "@xyflow/react";
-import dagre from "dagre";
+
+let elkInstance: any = null;
+
+const getElk = async () => {
+  if (elkInstance) return elkInstance;
+  const mod = await import("elkjs/lib/elk.bundled.js");
+  const ELK = (mod && (mod.default || mod)) as any;
+  elkInstance = new ELK();
+  return elkInstance;
+};
 
 export type LayoutDirection = "TB" | "LR" | "BT" | "RL";
 
@@ -11,137 +20,152 @@ interface LayoutOptions {
   nodeSep?: number;
 }
 
-/**
- * Layout algorithm using Dagre for better hierarchical layouts
+const DEFAULT_NODE_WIDTH = 240;
+const DEFAULT_NODE_HEIGHT = 120;
+
+ /* Layout algorithm using ELK for better hierarchical layouts
  * Supports both horizontal (LR) and vertical (TB) orientations
- * from https://reactflow.dev/examples/layout/dagre
+ * from https://reactflow.dev/examples/layout/elkjs
  */
-export const getLayoutedElements = (
+export const getLayoutedElements = async (
   nodes: Node[],
   edges: Edge[],
   direction: LayoutDirection = "TB",
   options: LayoutOptions = {},
-): { nodes: Node[]; edges: Edge[] } => {
-  const {
-    nodeWidth = 240,
-    nodeHeight = 120,
-    rankSep = 100,
-    nodeSep = 50,
-  } = options;
-
-  if (nodes.length === 0) {
-    return { nodes, edges };
-  }
+): Promise<{ nodes: Node[]; edges: Edge[] }> => {
+  if (nodes.length === 0) return { nodes, edges };
 
   const isHorizontal = direction === "LR" || direction === "RL";
 
-  // Create a new directed graph
-  const dagreGraph = new dagre.graphlib.Graph();
-  dagreGraph.setDefaultEdgeLabel(() => ({}));
+  const {
+    nodeWidth = DEFAULT_NODE_WIDTH,
+    nodeHeight = DEFAULT_NODE_HEIGHT,
+    // Horizontal needs more rank separation because nodes are wider than tall
+    rankSep = isHorizontal ? 120 : 80,
+    nodeSep = isHorizontal ? 50 : 60,
+  } = options;
 
-  // Configure the graph layout
-  dagreGraph.setGraph({
-    rankdir: direction,
-    ranksep: rankSep,
-    nodesep: nodeSep,
-    edgesep: 30,
-    marginx: 20,
-    marginy: 20,
+  const dirMap: Record<LayoutDirection, string> = {
+    TB: "DOWN",
+    LR: "RIGHT",
+    BT: "UP",
+    RL: "LEFT",
+  };
+
+  const elkDir = dirMap[direction] ?? "DOWN";
+
+  const elkNodes = nodes.map((n) => {
+    const data: any = (n as any).data ?? {};
+    const hasDetails = !!(data.department || data.email || data.phone);
+
+    // In horizontal mode swap width/height assumptions slightly
+    // so nodes don't overlap on the cross axis
+    const w = n.width ?? (hasDetails ? Math.max(nodeWidth, 260) : nodeWidth);
+    const h = n.height ?? (hasDetails ? Math.max(nodeHeight, 140) : nodeHeight);
+
+    return { id: n.id, width: w, height: h };
   });
 
-  // Add nodes to the graph
-  nodes.forEach((node) => {
-    dagreGraph.setNode(node.id, {
-      width: nodeWidth,
-      height: nodeHeight,
-    });
-  });
+  const elkEdges = edges.map((e) => ({
+    id: e.id || `${e.source}->${e.target}`,
+    sources: [e.source],
+    targets: [e.target],
+  }));
 
-  edges.forEach((edge) => {
-    dagreGraph.setEdge(edge.source, edge.target);
-  });
+  const graph: any = {
+    id: "root",
+    layoutOptions: {
+      
+      "elk.algorithm": "layered",
+      "elk.direction": elkDir,
 
-  dagre.layout(dagreGraph);
+      
+      "elk.spacing.nodeNode": String(nodeSep),
+      "elk.layered.spacing.nodeNodeBetweenLayers": String(rankSep),
+      "elk.spacing.edgeNode": "25",
+      "elk.spacing.edgeEdge": "15",
+      "elk.padding": "[top=50, left=50, bottom=50, right=50]",
+
+      "elk.layered.nodePlacement.strategy": "NETWORK_SIMPLEX",
+
+      "elk.layered.crossingMinimization.strategy": "LAYER_SWEEP",
+
+      "elk.edgeRouting": "ORTHOGONAL",
+      "elk.layered.mergeEdges": "true",
+
+      "elk.layered.layering.strategy": "NETWORK_SIMPLEX",
+
+      "elk.layered.compactComponents": "true",
+
+      "elk.aspectRatio": isHorizontal ? "2.5" : "0.6",
+
+      ...(isHorizontal && {
+        "elk.layered.nodePlacement.bk.fixedAlignment": "BALANCED",
+        "elk.layered.unnecessaryBendpoints": "true",
+      }),
+    },
+    children: elkNodes,
+    edges: elkEdges,
+  };
+
+  const elk = await getElk();
+  const result = await elk.layout(graph);
 
   const layoutedNodes = nodes.map((node) => {
-    const nodeWithPosition = dagreGraph.node(node.id);
+    const placed =
+      (result.children ?? []).find((c: any) => c.id === node.id) ?? {};
 
-    // Dagre returns the center position of the node
-    // We need to adjust to top-left corner for react flow
-    const x = nodeWithPosition.x - nodeWidth / 2;
-    const y = nodeWithPosition.y - nodeHeight / 2;
+    const x = typeof placed.x === "number" ? placed.x : 0;
+    const y = typeof placed.y === "number" ? placed.y : 0;
 
     return {
       ...node,
       position: { x, y },
-      // Set source and target positions based on direction
-      sourcePosition: isHorizontal ? "right" : "bottom",
-      targetPosition: isHorizontal ? "left" : "top",
+      // These tell React Flow which side of the node to attach edges.
+      sourcePosition: isHorizontal ? ("right" as const) : ("bottom" as const),
+      targetPosition: isHorizontal ? ("left" as const) : ("top" as const),
     } as Node;
   });
 
   return { nodes: layoutedNodes, edges };
 };
 
-/**
- * Apply tree layout specifically optimized for organizational charts (vertical)
- */
-export const getTreeLayout = (
+export const getTreeLayout = async (
   nodes: Node[],
   edges: Edge[],
-): { nodes: Node[]; edges: Edge[] } => {
-  return getLayoutedElements(nodes, edges, "TB", {
+): Promise<{ nodes: Node[]; edges: Edge[] }> =>
+  getLayoutedElements(nodes, edges, "TB", {
     nodeWidth: 240,
     nodeHeight: 120,
-    rankSep: 100,
+    rankSep: 80,
+    nodeSep: 60,
+  });
+
+export const getHorizontalLayout = async (
+  nodes: Node[],
+  edges: Edge[],
+): Promise<{ nodes: Node[]; edges: Edge[] }> =>
+  getLayoutedElements(nodes, edges, "LR", {
+    nodeWidth: 240,
+    nodeHeight: 120,
+    rankSep: 120,
     nodeSep: 50,
   });
-};
 
-/**
- * Apply horizontal tree layout
- */
-export const getHorizontalLayout = (
-  nodes: Node[],
-  edges: Edge[],
-): { nodes: Node[]; edges: Edge[] } => {
-  return getLayoutedElements(nodes, edges, "LR", {
-    nodeWidth: 240,
-    nodeHeight: 120,
-    rankSep: 150,
-    nodeSep: 80,
-  });
-};
-
-/**
- * Calculate bounds of all nodes
- */
 export const getNodesBounds = (nodes: Node[]) => {
-  if (nodes.length === 0) {
-    return { x: 0, y: 0, width: 0, height: 0 };
-  }
+  if (nodes.length === 0) return { x: 0, y: 0, width: 0, height: 0 };
 
-  let minX = Infinity;
-  let minY = Infinity;
-  let maxX = -Infinity;
-  let maxY = -Infinity;
+  let minX = Infinity,
+    minY = Infinity,
+    maxX = -Infinity,
+    maxY = -Infinity;
 
-  nodes.forEach((node) => {
-    const x = node.position.x;
-    const y = node.position.y;
-    const width = node.width || 240;
-    const height = node.height || 120;
-
-    minX = Math.min(minX, x);
-    minY = Math.min(minY, y);
-    maxX = Math.max(maxX, x + width);
-    maxY = Math.max(maxY, y + height);
+  nodes.forEach(({ position, width, height }) => {
+    minX = Math.min(minX, position.x);
+    minY = Math.min(minY, position.y);
+    maxX = Math.max(maxX, position.x + (width ?? DEFAULT_NODE_WIDTH));
+    maxY = Math.max(maxY, position.y + (height ?? DEFAULT_NODE_HEIGHT));
   });
 
-  return {
-    x: minX,
-    y: minY,
-    width: maxX - minX,
-    height: maxY - minY,
-  };
+  return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
 };

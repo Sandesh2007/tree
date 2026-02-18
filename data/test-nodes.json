@@ -1,0 +1,75 @@
+{
+  "nodes": [
+    {
+      "key": "n1",
+      "name": "Alice Morgan",
+      "role": "Chief Executive Officer",
+      "department": "Executive",
+      "email": "alice.morgan@example.com",
+      "level": "executive",
+      "loc": "0 0"
+    },
+    {
+      "key": "n2",
+      "name": "Bob Chen",
+      "role": "Chief Technology Officer",
+      "department": "Engineering",
+      "email": "bob.chen@example.com",
+      "level": "executive",
+      "loc": "200 0"
+    },
+    {
+      "key": "n3",
+      "name": "Carla Diaz",
+      "role": "Chief Financial Officer",
+      "department": "Finance",
+      "email": "carla.diaz@example.com",
+      "level": "executive",
+      "loc": "-200 0"
+    },
+    {
+      "key": "n4",
+      "name": "Derek Patel",
+      "role": "Engineering Manager",
+      "department": "Engineering",
+      "email": "derek.patel@example.com",
+      "level": "manager",
+      "loc": "200 150"
+    },
+    {
+      "key": "n5",
+      "name": "Elena Rossi",
+      "role": "Design Lead",
+      "department": "Design",
+      "email": "elena.rossi@example.com",
+      "level": "lead",
+      "loc": "0 150"
+    },
+    {
+      "key": "n6",
+      "name": "Frank Li",
+      "role": "Software Engineer",
+      "department": "Engineering",
+      "email": "frank.li@example.com",
+      "level": "member",
+      "loc": "200 300"
+    },
+    {
+      "key": "n7",
+      "name": "Grace Kim",
+      "role": "Product Intern",
+      "department": "Product",
+      "email": "grace.kim@example.com",
+      "level": "member",
+      "loc": "0 300"
+    }
+  ],
+  "links": [
+    { "key": "l1", "from": "n2", "to": "n1", "relationType": "reports_to", "label": "reports to" },
+    { "key": "l2", "from": "n3", "to": "n1", "relationType": "reports_to" },
+    { "key": "l3", "from": "n4", "to": "n2", "relationType": "reports_to" },
+    { "key": "l4", "from": "n6", "to": "n4", "relationType": "reports_to" },
+    { "key": "l5", "from": "n5", "to": "n1", "relationType": "collaborates", "label": "collaborates with" },
+    { "key": "l6", "from": "n7", "to": "n5", "relationType": "mentors", "label": "mentored by" }
+  ]
+}

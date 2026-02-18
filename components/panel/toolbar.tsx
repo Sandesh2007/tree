@@ -258,7 +258,7 @@ export default function Toolbar({
           disabled={nodeCount === 0}
           title="Export JSON"
         >
-          <Download size={16} />
+          <Upload size={16} />
         </Button>
 
         <Button
@@ -272,7 +272,7 @@ export default function Toolbar({
         </Button>
 
         <Button variant="ghost" size="md" onClick={onImport} title="Import">
-          <Upload size={16} />
+          <Download size={16} />
         </Button>
 
         {nodeCount > 0 && (
